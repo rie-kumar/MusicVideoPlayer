@@ -16,6 +16,7 @@ namespace MusicVideoPlayer.UI
         private List<object> screenPositions = (new object[] 
         { 
             VideoPlacement.Background, 
+            VideoPlacement.BackgroundLow,
             VideoPlacement.Center, 
             VideoPlacement.Left, 
             VideoPlacement.Right,

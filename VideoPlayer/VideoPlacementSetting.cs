@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace MusicVideoPlayer.Util
 {
-    public enum VideoPlacement { Background, Center, Left, Right, Bottom, Top, Custom };
+    public enum VideoPlacement { Background, BackgroundLow, Center, Left, Right, Bottom, Top, Custom };
 
     public class VideoPlacementSetting
     {   
@@ -17,6 +17,8 @@ namespace MusicVideoPlayer.Util
             {
                 case VideoPlacement.Background:
                     return new Vector3(0, 20, 50);
+                case VideoPlacement.BackgroundLow:
+                    return new Vector3(0, 4.5f, 50);
                 case VideoPlacement.Center:
                     return new Vector3(0, 4.5f, 35);
                 case VideoPlacement.Left:
@@ -34,6 +36,8 @@ namespace MusicVideoPlayer.Util
         {
             switch (placement)
             {
+
+                case VideoPlacement.BackgroundLow:
                 case VideoPlacement.Background:
                     return new Vector3(0, 0, 0);
                 case VideoPlacement.Center:
@@ -53,6 +57,7 @@ namespace MusicVideoPlayer.Util
         {
             switch (placement)
             {
+                case VideoPlacement.BackgroundLow:
                 case VideoPlacement.Background:
                     return 30;
                 case VideoPlacement.Center:
@@ -73,6 +78,7 @@ namespace MusicVideoPlayer.Util
             return new float[]
             {
                 (float)VideoPlacement.Background,
+                (float)VideoPlacement.BackgroundLow,
                 (float)VideoPlacement.Center,
                 (float)VideoPlacement.Left,
                 (float)VideoPlacement.Right,
@@ -88,6 +94,8 @@ namespace MusicVideoPlayer.Util
             {
                 case VideoPlacement.Background:
                     return "Background";
+                case VideoPlacement.BackgroundLow:
+                    return "Background Low";
                 case VideoPlacement.Center:
                     return "Center";
                 case VideoPlacement.Left:
