@@ -155,10 +155,10 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /Y "$(TargetDir)$(TargetFileName)" "D:\SteamLibrary\steamapps\common\Beat Saber\Plugins"
-copy /Y "$(TargetDir)VideoPlayer\bin\Release\HtmlAgilityPack.dll" "C:\Users\brado\Source\Repos\MusicVideoPlayer\zipitup\Libs\"
-copy /Y "$(TargetDir)VideoPlayer\bin\Release\MusicVideoPlayer.dll" "C:\Users\brado\Source\Repos\MusicVideoPlayer\zipitup\Plugins\"
-copy /Y "$(TargetDir)Youtube-dl" "C:\Users\brado\Source\Repos\MusicVideoPlayer\zipitup\Youtube-dl"
-7z a "$(TargetDir)zipitup.zip" "$(TargetDir)zipitup\*"</PostBuildEvent>
+copy /Y "$(TargetDir)HtmlAgilityPack.dll" "$(ProjectDir)zipitup\Libs\"
+copy /Y "$(TargetDir)MusicVideoPlayer.dll" "$(ProjectDir)zipitup\Plugins\"
+copy /Y "$(ProjectDir)YT\youtube-dl.exe" "$(ProjectDir)zipitup\Youtube-dl"
+7z a "$(ProjectDir)zipitup.zip" "$(ProjectDir)zipitup\*"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
