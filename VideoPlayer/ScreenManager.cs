@@ -153,11 +153,13 @@ namespace MusicVideoPlayer
             }
             if(!videoPlayer.isPrepared) videoPlayer.Prepare();
             vsRenderer.material.color = Color.clear;
+            //Not Sure which of these kills the audio but removing any one of them makes the audio go back on
             videoPlayer.audioOutputMode = VideoAudioOutputMode.None; // Send Audio elsewhere
-            //for (byte track = 0; track < videoPlayer.audioTrackCount; track++) // For Each Track -> Mute Audio on that track
-            //{
-            //    videoPlayer.SetDirectAudioMute(track, true);
-            //}
+            for (ushort track = 0; track < videoPlayer.audioTrackCount; track++) // For Each Track -> Mute Audio on that track
+            {
+                videoPlayer.SetDirectAudioMute(track, true);
+                videoPlayer.SetDirectAudioVolume(track, 0);
+            }
             videoPlayer.Pause();
         }
 
