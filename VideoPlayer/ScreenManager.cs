@@ -171,7 +171,12 @@ namespace MusicVideoPlayer
 
             ShowScreen();
             vsRenderer.material.color = _onColor;
-
+            try
+            {
+                float songSpeed = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.gameplayModifiers.songSpeedMul;
+                Plugin.logger.Debug($"Desired Speed: {songSpeed}");
+                Plugin.logger.Debug($"Current Speed: {videoPlayer.playbackSpeed}");
+            } catch (Exception e) { }
             Plugin.logger.Debug("Offset for video: " + offsetSec);
             if (offsetSec < 0)
             {

@@ -474,7 +474,7 @@ namespace MusicVideoPlayer
                 isPreviewing = true;
                 ScreenManager.Instance.PlayVideo(false);
                 songPreviewPlayer.volume = 1;
-                songPreviewPlayer.CrossfadeTo(selectedLevel.GetPreviewAudioClipAsync(new CancellationToken()).Result, 0, selectedLevel.previewDuration, 1f);
+                songPreviewPlayer.CrossfadeTo(selectedLevel.GetPreviewAudioClipAsync(new CancellationToken()).Result, 0, selectedLevel.songDuration, 1f);
             }
 
             SetPreviewState();
