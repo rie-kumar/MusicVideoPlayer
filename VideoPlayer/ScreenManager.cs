@@ -33,6 +33,16 @@ namespace MusicVideoPlayer
         private AudioTimeSyncController syncController;
         private float offsetSec = 0f;
 
+        private EnvironmentSpawnRotation _envSpawnRot;
+        public EnvironmentSpawnRotation instanceEnvironmentSpawnRotation
+        {
+            get
+            {
+                if (_envSpawnRot == null)
+                    _envSpawnRot = Resources.FindObjectsOfTypeAll<EnvironmentSpawnRotation>().FirstOrDefault();
+                return _envSpawnRot;
+            }
+        }
         public static void OnLoad()
         {
             Plugin.logger.Debug("OnLoad: ScreenManager");
@@ -171,12 +181,30 @@ namespace MusicVideoPlayer
 
             ShowScreen();
             vsRenderer.material.color = _onColor;
-            try
+            try // Try to get these as errors happen when only previewing (and they are unnecessary)
             {
+                float practiceSettingsSongSpeedMul;
+                float practiceSettingsSongStart;
+                try // Try to get these as ther will be a null reference if not in practice mode or only previewing
+                {
+                    practiceSettingsSongSpeedMul = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.songSpeedMul;
+                    practiceSettingsSongStart = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.startSongTime;
+                }
+                catch (NullReferenceException e)
+                {
+                    practiceSettingsSongSpeedMul = 1;
+                    practiceSettingsSongStart = 0;
+                }
                 float songSpeed = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.gameplayModifiers.songSpeedMul;
-                Plugin.logger.Debug($"Desired Speed: {songSpeed}");
-                Plugin.logger.Debug($"Current Speed: {videoPlayer.playbackSpeed}");
-            } catch (Exception e) { }
+                videoPlayer.playbackSpeed = practiceSettingsSongSpeedMul != 1 ? practiceSettingsSongSpeedMul : songSpeed; // Set video speed to practice or non-practice speed
+                Plugin.logger.Debug($"Practice Start: {practiceSettingsSongStart}");
+                offsetSec += practiceSettingsSongStart; // Change video start time to match practice start time
+                instanceEnvironmentSpawnRotation.didRotateEvent += ChangeRotation360; // Set up event for running 360 video (will simply do nothing for regular video)
+            }
+            catch (Exception e)
+            {
+                Plugin.logger.Error(e.StackTrace);
+            }
             Plugin.logger.Debug("Offset for video: " + offsetSec);
             if (offsetSec < 0)
             {
@@ -324,6 +352,15 @@ namespace MusicVideoPlayer
 
             glowShader = shader;
             return shader;
+        }
+
+        //Function to run when rotation changes in 360/90 mode
+        //Will never be called if not in those modes
+        //Changes video rotation to match where you are looking in 360/90
+        public void ChangeRotation360(Quaternion quaternion)
+        {
+            screen.transform.eulerAngles = new Vector3(screen.transform.eulerAngles.x, quaternion.eulerAngles.y, screen.transform.eulerAngles.z); // Set screen rotation relative to itself
+            screen.transform.position = new Vector3(quaternion.eulerAngles.y, screen.transform.position.y, screen.transform.position.z); // Set screen rotation relative to you
         }
     }
 }
