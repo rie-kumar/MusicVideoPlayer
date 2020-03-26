@@ -181,16 +181,16 @@ namespace MusicVideoPlayer
 
             ShowScreen();
             vsRenderer.material.color = _onColor;
+            float practiceSettingsSongSpeedMul = 1;
+            float practiceSettingsSongStart = 0;
             try // Try to get these as errors happen when only previewing (and they are unnecessary)
             {
-                float practiceSettingsSongSpeedMul;
-                float practiceSettingsSongStart;
-                try // Try to get these as ther will be a null reference if not in practice mode or only previewing
+                try // Try to get these as there will be a null reference if not in practice mode or only previewing
                 {
                     practiceSettingsSongSpeedMul = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.songSpeedMul;
                     practiceSettingsSongStart = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.startSongTime;
                 }
-                catch (NullReferenceException e)
+                catch (NullReferenceException)
                 {
                     practiceSettingsSongSpeedMul = 1;
                     practiceSettingsSongStart = 0;
@@ -198,7 +198,8 @@ namespace MusicVideoPlayer
                 float songSpeed = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.gameplayModifiers.songSpeedMul;
                 videoPlayer.playbackSpeed = practiceSettingsSongSpeedMul != 1 ? practiceSettingsSongSpeedMul : songSpeed; // Set video speed to practice or non-practice speed
                 Plugin.logger.Debug($"Practice Start: {practiceSettingsSongStart}");
-                offsetSec += practiceSettingsSongStart; // Change video start time to match practice start time
+                // offsetSec += practiceSettingsSongStart; // Change video start time to match practice start time
+                videoPlayer.time = offsetSec + practiceSettingsSongStart;
                 instanceEnvironmentSpawnRotation.didRotateEvent += ChangeRotation360; // Set up event for running 360 video (will simply do nothing for regular video)
             }
             catch (Exception e)
@@ -213,7 +214,10 @@ namespace MusicVideoPlayer
             }
             else
             {
-                videoPlayer.Play();
+                StopAllCoroutines();
+                Plugin.logger.Debug($"Song Time: {syncController.audioSource.time}");
+                Plugin.logger.Debug($"Offset Time: {-offsetSec}");
+                StartCoroutine(StartVideoDelayed(offsetSec, sync));
             }
         }
 
@@ -221,6 +225,8 @@ namespace MusicVideoPlayer
         {
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Any());
             syncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().First();
+            Plugin.logger.Debug($"dspTimeOffset Start: {syncController.dspTimeOffset}");
+            Plugin.logger.Debug($"songTime Start: {syncController.songTime}");
 
             SetPlacement(MVPSettings.instance.PlacementMode);
 
@@ -266,6 +272,8 @@ namespace MusicVideoPlayer
 
             if(sync)
             {
+                Plugin.logger.Debug($"Song Time: {syncController.audioSource.time}");
+                Plugin.logger.Debug($"Offset Time: {-offset}");
                 yield return new WaitUntil(() => syncController.songTime >= -offset);
             }
             else
@@ -349,7 +357,6 @@ namespace MusicVideoPlayer
         
             Shader shader = myLoadedAssetBundle.LoadAsset<Shader>("ScreenGlow");
             myLoadedAssetBundle.Unload(false);
-
             glowShader = shader;
             return shader;
         }
