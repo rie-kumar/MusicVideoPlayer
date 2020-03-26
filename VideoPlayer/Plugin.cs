@@ -10,17 +10,21 @@ using UnityEngine;
 using System.Linq;
 using BeatSaberMarkupLanguage.GameplaySetup;
 
+
 namespace MusicVideoPlayer
 {
-    public sealed class Plugin : IBeatSaberPlugin
+    [Plugin(RuntimeOptions.SingleStartInit)]
+    public sealed class Plugin
     {
         public static IPA.Logging.Logger logger;
         
-        public void Init(object thisWillBeNull, IPA.Logging.Logger logger)
+        [Init]
+        public void Init(IPA.Logging.Logger logger)
         {
             Plugin.logger = logger;
         }
 
+        [OnStart]
         public void OnApplicationStart()
         {
             BSMLSettings.instance.AddSettingsMenu("MVP", "MusicVideoPlayer.Views.settings.bsml", MVPSettings.instance);
@@ -38,6 +42,7 @@ namespace MusicVideoPlayer
             VideoMenu.instance.OnLoad();
         }
 
+        [OnExit]
         public void OnApplicationQuit()
         {
             BSEvents.menuSceneLoadedFresh -= OnMenuSceneLoadedFresh;
