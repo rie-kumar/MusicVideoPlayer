@@ -145,6 +145,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\mvp.bundle" />
+    <None Include="..\.editorconfig">
+      <Link>.editorconfig</Link>
+    </None>
     <None Include="packages.config" />
     <EmbeddedResource Include="Views\settings.bsml" />
     <EmbeddedResource Include="Views\video-menu.bsml" />
