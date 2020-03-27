@@ -484,7 +484,7 @@ namespace MusicVideoPlayer
         private void OnSearchAction()
         {
             ChangeView(true);
-            searchKeyboard.SetText(selectedLevel.songName + " - " + selectedLevel.songSubName);
+            searchKeyboard.SetText(selectedLevel.songName + " - " + selectedLevel.songAuthorName);
             parserParams.EmitEvent("show-keyboard");
         }
 

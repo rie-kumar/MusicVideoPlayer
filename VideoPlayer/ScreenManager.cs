@@ -43,6 +43,7 @@ namespace MusicVideoPlayer
                 return _envSpawnRot;
             }
         }
+
         public static void OnLoad()
         {
             Plugin.logger.Debug("OnLoad: ScreenManager");
@@ -179,6 +180,11 @@ namespace MusicVideoPlayer
             if (currentVideo == null) return;
             if (currentVideo.downloadState != DownloadState.Downloaded) return;
 
+            if (instanceEnvironmentSpawnRotation != null) // will be null when previewing
+            {
+                instanceEnvironmentSpawnRotation.didRotateEvent += ChangeRotation360; // Set up event for running 360 video (will simply do nothing for regular video)
+            } 
+
             ShowScreen();
             vsRenderer.material.color = _onColor;
             float practiceSettingsSongSpeedMul = 1;
@@ -188,7 +194,11 @@ namespace MusicVideoPlayer
                 try // Try to get these as there will be a null reference if not in practice mode or only previewing
                 {
                     practiceSettingsSongSpeedMul = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.songSpeedMul;
-                    practiceSettingsSongStart = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.startSongTime;
+                    practiceSettingsSongStart = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.startSongTime - 1;
+                    if (practiceSettingsSongStart < 0)
+                    {
+                        practiceSettingsSongStart = 0;
+                    }
                 }
                 catch (NullReferenceException)
                 {
@@ -197,27 +207,33 @@ namespace MusicVideoPlayer
                 }
                 float songSpeed = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.gameplayModifiers.songSpeedMul;
                 videoPlayer.playbackSpeed = practiceSettingsSongSpeedMul != 1 ? practiceSettingsSongSpeedMul : songSpeed; // Set video speed to practice or non-practice speed
-                Plugin.logger.Debug($"Practice Start: {practiceSettingsSongStart}");
-                // offsetSec += practiceSettingsSongStart; // Change video start time to match practice start time
-                videoPlayer.time = offsetSec + practiceSettingsSongStart;
-                instanceEnvironmentSpawnRotation.didRotateEvent += ChangeRotation360; // Set up event for running 360 video (will simply do nothing for regular video)
+
+                if (offsetSec + practiceSettingsSongStart > 0)
+                {
+                    videoPlayer.time = offsetSec + practiceSettingsSongStart;
+                }
+                else
+                {
+                    videoPlayer.time = 0;
+                    offsetSec += practiceSettingsSongStart;
+                }
+
             }
             catch (Exception e)
             {
-                Plugin.logger.Error(e.StackTrace);
+                Plugin.logger.Debug("Probably cause previews don't have speed mults");
+                Plugin.logger.Error(e.ToString());
             }
             Plugin.logger.Debug("Offset for video: " + offsetSec);
             if (offsetSec < 0)
             {
                 StopAllCoroutines();
-                StartCoroutine(StartVideoDelayed(offsetSec, sync));
+                StartCoroutine(StartVideoDelayed(-offsetSec, sync));
             }
             else
             {
                 StopAllCoroutines();
-                Plugin.logger.Debug($"Song Time: {syncController.audioSource.time}");
-                Plugin.logger.Debug($"Offset Time: {-offsetSec}");
-                StartCoroutine(StartVideoDelayed(offsetSec, sync));
+                StartCoroutine(StartVideoDelayed(practiceSettingsSongStart, sync));
             }
         }
 
@@ -225,8 +241,6 @@ namespace MusicVideoPlayer
         {
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Any());
             syncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().First();
-            Plugin.logger.Debug($"dspTimeOffset Start: {syncController.dspTimeOffset}");
-            Plugin.logger.Debug($"songTime Start: {syncController.songTime}");
 
             SetPlacement(MVPSettings.instance.PlacementMode);
 
@@ -257,28 +271,26 @@ namespace MusicVideoPlayer
             }
         }
 
-        private IEnumerator StartVideoDelayed(float offset, bool sync)
+        private IEnumerator StartVideoDelayed(float startTime, bool sync)
         {
-            if(offset >= 0)
-            {
-                videoPlayer.Play();
-                yield break;
-            }
-
-            videoPlayer.frame = 0;
 
             // Wait
             float timeElapsed = 0;
 
             if(sync)
             {
-                Plugin.logger.Debug($"Song Time: {syncController.audioSource.time}");
-                Plugin.logger.Debug($"Offset Time: {-offset}");
-                yield return new WaitUntil(() => syncController.songTime >= -offset);
+                yield return new WaitUntil(() => syncController.songTime >= startTime);
             }
             else
             {
-                while (timeElapsed < -offset)
+                if (startTime >= 0)
+                {
+                    videoPlayer.Play();
+                    yield break;
+                }
+                videoPlayer.frame = 0;
+
+                while (timeElapsed < -startTime)
                 {
                     timeElapsed += Time.deltaTime;
                     yield return null;
@@ -366,8 +378,9 @@ namespace MusicVideoPlayer
         //Changes video rotation to match where you are looking in 360/90
         public void ChangeRotation360(Quaternion quaternion)
         {
-            screen.transform.eulerAngles = new Vector3(screen.transform.eulerAngles.x, quaternion.eulerAngles.y, screen.transform.eulerAngles.z); // Set screen rotation relative to itself
-            screen.transform.position = new Vector3(quaternion.eulerAngles.y, screen.transform.position.y, screen.transform.position.z); // Set screen rotation relative to you
+            // Plugin.logger.Debug($"Song Time: {syncController.songTime}");
+            // screen.transform.eulerAngles = new Vector3(screen.transform.eulerAngles.x, quaternion.eulerAngles.y, screen.transform.eulerAngles.z); // Set screen rotation relative to itself
+            // screen.transform.position = new Vector3(quaternion.eulerAngles.y, screen.transform.position.y, screen.transform.position.z); // Set screen rotation relative to you
         }
     }
 }
