@@ -161,6 +161,11 @@ namespace MusicVideoPlayer.YT
                         video.downloadProgress = float.Parse(match.Value.Substring(0, match.Value.Length - 1)) / 100;
                         downloadProgress?.Invoke(video);
                         download.Update();
+
+                        if(video.downloadState == DownloadState.Cancelled)
+                        {
+                            (sender as Process).Kill();
+                        }
                     }
                     Plugin.logger.Info(e.Data);
                 }
@@ -180,6 +185,7 @@ namespace MusicVideoPlayer.YT
 
                 if (video.downloadState == DownloadState.Cancelled)
                 {
+                    Plugin.logger.Debug("Cancelled");
                     VideoLoader.Instance.DeleteVideo(video);
                 }
                 else

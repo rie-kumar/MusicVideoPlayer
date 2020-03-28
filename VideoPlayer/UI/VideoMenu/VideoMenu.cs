@@ -53,6 +53,9 @@ namespace MusicVideoPlayer
         [UIComponent("preview-button")]
         private TextMeshProUGUI previewButtonText;
 
+        [UIComponent("delete-button")]
+        private TextMeshProUGUI deleteButtonText;
+
         [UIComponent("search-results-loading")]
         private TextMeshProUGUI searchResultsLoadingText;
 
@@ -151,7 +154,7 @@ namespace MusicVideoPlayer
         {
             StopPreview(false);
 
-            if (videoData == null && selectedLevel != null)
+            if(videoData == null && selectedLevel != null)
             {
                 videoData = VideoLoader.Instance.GetVideo(selectedLevel);
             }
@@ -168,16 +171,21 @@ namespace MusicVideoPlayer
             }
             else
             {
-                currentVideoTitleText.text = "NO VIDEO SET";
-                currentVideoDescriptionText.text = "";
-                currentVideoOffsetText.text = "N/A";
-                EnableButtons(false);
+                ClearSettings();
             }
 
             LoadVideoDownloadState();
 
             Plugin.logger.Debug("Has Loaded: " + videoData);
             ScreenManager.Instance.PrepareVideo(videoData);
+        }
+
+        public void ClearSettings()
+        {
+            currentVideoTitleText.text = "NO VIDEO SET";
+            currentVideoDescriptionText.text = "";
+            currentVideoOffsetText.text = "N/A";
+            EnableButtons(false);
         }
 
         public void Activate()
@@ -209,6 +217,7 @@ namespace MusicVideoPlayer
             offsetDecreaseButton.interactable = enable;
             offsetIncreaseButton.interactable = enable;
             loopingButton.interactable = enable;
+            deleteButton.interactable = enable;
 
             if (selectedVideo == null || selectedVideo.downloadState != DownloadState.Downloaded)
             {
@@ -216,7 +225,6 @@ namespace MusicVideoPlayer
             }
 
             previewButton.interactable = enable;
-            deleteButton.interactable = enable;
 
             if(selectedLevel == null)
             {
@@ -334,6 +342,18 @@ namespace MusicVideoPlayer
             }
         }
 
+        private void UpdateDeleteButton()
+        {
+            if(selectedVideo.downloadState == DownloadState.Downloading)
+            {
+                deleteButtonText.SetText("Cancel");
+            }
+            else
+            {
+                deleteButtonText.SetText("Delete");
+            }
+        }
+
         private void LoadVideoDownloadState()
         {
             string state = "No Video";
@@ -358,6 +378,8 @@ namespace MusicVideoPlayer
                         state = "Cancelled";
                         break;
                 }
+
+                UpdateDeleteButton();
             }
 
             downloadStateText.text = "Download Progress: " + state;
@@ -458,7 +480,15 @@ namespace MusicVideoPlayer
         {
             if(selectedVideo != null)
             {
-                VideoLoader.Instance.DeleteVideo(selectedVideo);
+                if(selectedVideo.downloadState == DownloadState.Downloading)
+                {
+                    YouTubeDownloader.Instance.DequeueVideo(selectedVideo);
+                }
+                else
+                {
+                    VideoLoader.Instance.DeleteVideo(selectedVideo);
+                }
+
                 LoadVideoSettings(null);
             }
         }
