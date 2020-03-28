@@ -29,9 +29,6 @@ namespace MusicVideoPlayer
         [UIObject("root-object")]
         private GameObject root;
 
-        [UIObject("current-video-player")]
-        private GameObject currentVideoPlayer;
-
         #region Rect Transform
         [UIComponent("video-details")]
         private RectTransform videoDetailsViewRect;
