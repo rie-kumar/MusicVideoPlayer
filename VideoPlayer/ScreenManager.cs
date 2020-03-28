@@ -187,44 +187,46 @@ namespace MusicVideoPlayer
 
             ShowScreen();
             vsRenderer.material.color = _onColor;
-            float practiceSettingsSongSpeedMul = 1;
             float practiceSettingsSongStart = 0;
-            try // Try to get these as errors happen when only previewing (and they are unnecessary)
+            float songSpeed = 1;
+
+            if (BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData != null)
             {
-                try // Try to get these as there will be a null reference if not in practice mode or only previewing
+                if(BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings != null)
                 {
-                    practiceSettingsSongSpeedMul = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.songSpeedMul;
+                    songSpeed = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.songSpeedMul;
+                    Plugin.logger.Debug("Practice Speed: " + songSpeed);
                     practiceSettingsSongStart = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.startSongTime - 1;
+
                     if (practiceSettingsSongStart < 0)
                     {
                         practiceSettingsSongStart = 0;
                     }
                 }
-                catch (NullReferenceException)
+                
+                if(songSpeed == 1 && BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.gameplayModifiers != null)
                 {
-                    practiceSettingsSongSpeedMul = 1;
-                    practiceSettingsSongStart = 0;
+                    songSpeed = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.gameplayModifiers.songSpeedMul;
+                    Plugin.logger.Debug("Modifier Speed: " + songSpeed);
                 }
-                float songSpeed = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.gameplayModifiers.songSpeedMul;
-                videoPlayer.playbackSpeed = practiceSettingsSongSpeedMul != 1 ? practiceSettingsSongSpeedMul : songSpeed; // Set video speed to practice or non-practice speed
-
-                if (offsetSec + practiceSettingsSongStart > 0)
-                {
-                    videoPlayer.time = offsetSec + practiceSettingsSongStart;
-                }
-                else
-                {
-                    videoPlayer.time = 0;
-                    offsetSec += practiceSettingsSongStart;
-                }
-
             }
-            catch (Exception e)
+
+            Plugin.logger.Debug("Video currently playing at " + songSpeed + " times speed.");
+
+            videoPlayer.playbackSpeed = songSpeed;
+
+            if (offsetSec + practiceSettingsSongStart > 0)
             {
-                Plugin.logger.Debug("Probably cause previews don't have speed mults");
-                Plugin.logger.Error(e.ToString());
+                videoPlayer.time = offsetSec + practiceSettingsSongStart;
             }
+            else
+            {
+                videoPlayer.time = 0;
+                offsetSec += practiceSettingsSongStart;
+            }
+
             Plugin.logger.Debug("Offset for video: " + offsetSec);
+
             if (offsetSec < 0)
             {
                 StopAllCoroutines();
