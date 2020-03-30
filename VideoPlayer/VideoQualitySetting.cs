@@ -33,10 +33,10 @@ namespace MusicVideoPlayer.Util
                     break;
             }
 
-            if (true)
-            {
-                qualityString += "+bestaudio[acodec *= mp4]";
-            }
+            // if (true)
+            // {
+            //     qualityString += "+bestaudio[acodec *= mp4]";
+            // }
 
             return qualityString;
         }
