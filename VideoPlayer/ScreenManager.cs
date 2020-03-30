@@ -295,7 +295,7 @@ namespace MusicVideoPlayer
             }
             else
             {
-                if (startTime >= 0)
+                if (startTime == 0)
                 {
                     videoPlayer.Play();
                     yield break;
@@ -303,7 +303,7 @@ namespace MusicVideoPlayer
 
                 videoPlayer.frame = 0;
 
-                while (timeElapsed < -startTime)
+                while (timeElapsed < startTime)
                 {
                     timeElapsed += Time.deltaTime;
                     yield return null;

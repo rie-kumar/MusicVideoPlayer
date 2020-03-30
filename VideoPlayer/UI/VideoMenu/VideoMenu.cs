@@ -500,6 +500,7 @@ namespace MusicVideoPlayer
             else
             {
                 isPreviewing = true;
+                ScreenManager.Instance.PrepareVideo(selectedVideo);
                 ScreenManager.Instance.PlayVideo(true);
                 songPreviewPlayer.volume = 1;
                 songPreviewPlayer.CrossfadeTo(selectedLevel.GetPreviewAudioClipAsync(new CancellationToken()).Result, 0, selectedLevel.songDuration, 1f);
