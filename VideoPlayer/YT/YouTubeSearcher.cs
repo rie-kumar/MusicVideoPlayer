@@ -21,7 +21,7 @@ namespace MusicVideoPlayer.YT
             searchResults = new List<YTResult>();
 
             // get youtube results
-            string url = "https://www.youtube.com/results?search_query=" + search;
+            string url = "https://www.youtube.com/results?search_query=" + Uri.EscapeDataString(search);
             UnityWebRequest request = UnityWebRequest.Get(url);
 
             yield return request.SendWebRequest();

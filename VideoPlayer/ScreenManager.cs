@@ -200,10 +200,7 @@ namespace MusicVideoPlayer
                     {
                         try // Try to get these as there will be a null reference if not in practice mode or only previewing
                         {
-                            practiceSettingsSongSpeedMul = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData
-                                .practiceSettings.songSpeedMul;
-                            practiceSettingsSongStart =
-                                BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.startSongTime - 1;
+                            practiceSettingsSongStart = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.startSongTime - 1;
                             if (practiceSettingsSongStart < 0)
                             {
                                 practiceSettingsSongStart = 0;
@@ -211,15 +208,13 @@ namespace MusicVideoPlayer
                         }
                         catch (NullReferenceException)
                         {
-                            practiceSettingsSongSpeedMul = 1;
                             practiceSettingsSongStart = 0;
                         }
 
-                        float songSpeed = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.gameplayModifiers
-                            .songSpeedMul;
+                        float songSpeed = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.gameplayModifiers.songSpeedMul;
                         videoPlayer.playbackSpeed =
-                            practiceSettingsSongSpeedMul != 1
-                                ? practiceSettingsSongSpeedMul
+                            BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings != null
+                                ? BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.songSpeedMul
                                 : songSpeed; // Set video speed to practice or non-practice speed
 
                         if (offsetSec + practiceSettingsSongStart > 0)
@@ -249,6 +244,7 @@ namespace MusicVideoPlayer
             else
             {
                 // videoPlayer.audioOutputMode = VideoAudioOutputMode.Direct; // Send Audio elsewhere
+                videoPlayer.playbackSpeed = 1;
             }
 
             Plugin.logger.Debug("Offset for video: " + offsetSec);
