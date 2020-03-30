@@ -240,11 +240,11 @@ namespace MusicVideoPlayer
                 }
 
                 // videoPlayer.audioOutputMode = VideoAudioOutputMode.None; // Send Audio elsewhere
-                for (ushort track = 0; track < videoPlayer.audioTrackCount; track++) // For Each Track -> Mute Audio on that track
-                {
-                    videoPlayer.SetDirectAudioMute(track, true);
-                    videoPlayer.SetDirectAudioVolume(track, 0);
-                }
+                // for (ushort track = 0; track < videoPlayer.audioTrackCount; track++) // For Each Track -> Mute Audio on that track
+                // {
+                //     videoPlayer.SetDirectAudioMute(track, true);
+                //     videoPlayer.SetDirectAudioVolume(track, 0);
+                // }
             }
             else
             {
