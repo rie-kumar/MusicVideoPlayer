@@ -5,6 +5,7 @@ using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.Web;
+using UnityEngine.Networking;
 
 namespace MusicVideoPlayer.YT
 {
@@ -18,18 +19,20 @@ namespace MusicVideoPlayer.YT
         {
             searchInProgress = true;
             searchResults = new List<YTResult>();
-            // get youtube results
-            string url = "https://www.youtube.com/results?search_query=" + Uri.EscapeDataString(search); //encode to account for special characters
-            WWW www = new WWW(url);
-            yield return www;
 
-            if (www.error != null)
+            // get youtube results
+            string url = "https://www.youtube.com/results?search_query=" + search;
+            UnityWebRequest request = UnityWebRequest.Get(url);
+
+            yield return request.SendWebRequest();
+
+            if (request.error != null)
             {
-                Plugin.logger.Warn("Search: An Error occured while searching. " + www.error);
+                Plugin.logger.Warn("Search: An Error occured while searching. " + request.error);
                 yield break;
             }
 
-            MemoryStream stream = new MemoryStream(www.bytes);
+            MemoryStream stream = new MemoryStream(request.downloadHandler.data);
 
             HtmlDocument doc = new HtmlDocument();
             doc.Load(stream, System.Text.Encoding.UTF8);
