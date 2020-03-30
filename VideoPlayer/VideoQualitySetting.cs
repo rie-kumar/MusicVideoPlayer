@@ -13,17 +13,32 @@ namespace MusicVideoPlayer.Util
     {
         public static string Format(VideoQuality quality)
         {
+            String qualityString;
             switch (quality)
             {
                 case VideoQuality.Best:
-                    return "(bestvideo/best)[ext=mp4]";
+                    qualityString = "bestvideo[vcodec*=avc1]";
+                    break;
                 case VideoQuality.High:
-                    return "(bestvideo/best)[height<=720][ext=mp4]";
+                    qualityString = "bestvideo[height<=1080][vcodec*=avc1]";
+                    break;
+                case VideoQuality.Medium:
+                    qualityString = "bestvideo[height<=720][vcodec*=avc1]";
+                    break;
                 case VideoQuality.Low:
-                    return "(bestvideo/best)[height<480][ext=mp4]";
+                    qualityString = "bestvideo[height<=480][vcodec*=avc1]";
+                    break;
                 default:
-                    return "(bestvideo/best)[height<=480][ext=mp4]";
+                    qualityString = "bestvideo[height<=480][vcodec*=avc1]";
+                    break;
             }
+
+            if (true)
+            {
+                qualityString += "+bestaudio[acodec *= mp4]";
+            }
+
+            return qualityString;
         }
 
         public static float[] Modes()

@@ -34,6 +34,7 @@ namespace MusicVideoPlayer
         private float offsetSec = 0f;
 
         private EnvironmentSpawnRotation _envSpawnRot;
+
         public EnvironmentSpawnRotation instanceEnvironmentSpawnRotation
         {
             get
@@ -71,7 +72,7 @@ namespace MusicVideoPlayer
             BSEvents.menuSceneLoaded += OnMenuSceneLoaded;
 
             DontDestroyOnLoad(gameObject);
-            
+
             CreateScreen();
         }
 
@@ -81,7 +82,7 @@ namespace MusicVideoPlayer
             if (screen == null) return;
             vsRenderer.material.SetTexture("_MainTex", videoPlayer.texture);
         }
-        
+
         void CreateScreen()
         {
             screen = new GameObject("Screen");
@@ -94,7 +95,9 @@ namespace MusicVideoPlayer
             body.transform.localPosition = new Vector3(0, 0, 0.1f);
             body.transform.localScale = new Vector3(16f / 9f + 0.1f, 1.1f, 0.1f);
             Renderer bodyRenderer = body.GetComponent<Renderer>();
-            bodyRenderer.material = new Material(Resources.FindObjectsOfTypeAll<Material>().First(x => x.name == "DarkEnvironmentSimple")); // finding objects is wonky because platforms hides them
+            bodyRenderer.material = new Material(Resources.FindObjectsOfTypeAll<Material>()
+                .First(x =>
+                    x.name == "DarkEnvironmentSimple")); // finding objects is wonky because platforms hides them
 
             GameObject videoScreen = GameObject.CreatePrimitive(PrimitiveType.Quad);
             if (videoScreen.GetComponent<Collider>() != null) Destroy(videoScreen.GetComponent<Collider>());
@@ -104,11 +107,11 @@ namespace MusicVideoPlayer
             vsRenderer = videoScreen.GetComponent<Renderer>();
             vsRenderer.material = new Material(GetShader());
             vsRenderer.material.color = Color.clear;
-            
+
             screen.transform.position = VideoPlacementSetting.Position(placement);
             screen.transform.eulerAngles = VideoPlacementSetting.Rotation(placement);
             screen.transform.localScale = VideoPlacementSetting.Scale(placement) * Vector3.one;
-            
+
             videoPlayer = gameObject.AddComponent<VideoPlayer>();
             videoPlayer.isLooping = true;
             videoPlayer.renderMode = VideoRenderMode.MaterialOverride;
@@ -120,10 +123,10 @@ namespace MusicVideoPlayer
 
             OnMenuSceneLoaded();
         }
-        
+
         private void OnMenuSceneLoaded()
         {
-            if(currentVideo != null) PrepareVideo(currentVideo);
+            if (currentVideo != null) PrepareVideo(currentVideo);
             PauseVideo();
             //HideScreen();
         }
@@ -148,21 +151,24 @@ namespace MusicVideoPlayer
                 vsRenderer.material.color = Color.clear;
                 return;
             }
+
             if (video.downloadState != DownloadState.Downloaded) return;
             videoPlayer.isLooping = video.loop;
 
             string videoPath = VideoLoader.Instance.GetVideoPath(video);
             videoPlayer.Pause();
-            if(videoPlayer.url != videoPath) videoPlayer.url = videoPath;
+            if (videoPlayer.url != videoPath) videoPlayer.url = videoPath;
             offsetSec = video.offset / 1000f; // ms -> s
             if (video.offset >= 0)
             {
                 videoPlayer.time = offsetSec;
-            } else
+            }
+            else
             {
                 videoPlayer.time = 0;
             }
-            if(!videoPlayer.isPrepared) videoPlayer.Prepare();
+
+            if (!videoPlayer.isPrepared) videoPlayer.Prepare();
             vsRenderer.material.color = Color.clear;
             //Not Sure which of these kills the audio but removing any one of them makes the audio go back on
             videoPlayer.audioOutputMode = VideoAudioOutputMode.None; // Send Audio elsewhere
@@ -174,67 +180,80 @@ namespace MusicVideoPlayer
             videoPlayer.Pause();
         }
 
-        public void PlayVideo(bool sync)
+        public void PlayVideo(bool preview)
         {
             if (!showVideo) return;
             if (currentVideo == null) return;
             if (currentVideo.downloadState != DownloadState.Downloaded) return;
 
-            if (instanceEnvironmentSpawnRotation != null) // will be null when previewing
-            {
-                instanceEnvironmentSpawnRotation.didRotateEvent += ChangeRotation360; // Set up event for running 360 video (will simply do nothing for regular video)
-            } 
-
             ShowScreen();
             vsRenderer.material.color = _onColor;
             float practiceSettingsSongSpeedMul = 1;
             float practiceSettingsSongStart = 0;
-            try // Try to get these as errors happen when only previewing (and they are unnecessary)
+            if (!preview)
             {
-                try // Try to get these as there will be a null reference if not in practice mode or only previewing
+                if (instanceEnvironmentSpawnRotation != null) // will be null when previewing
                 {
-                    practiceSettingsSongSpeedMul = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.songSpeedMul;
-                    practiceSettingsSongStart = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.startSongTime - 1;
-                    if (practiceSettingsSongStart < 0)
+                    instanceEnvironmentSpawnRotation.didRotateEvent +=
+                        ChangeRotation360; // Set up event for running 360 video (will simply do nothing for regular video)
+                    try // Try to get these as errors happen when only previewing (and they are unnecessary)
                     {
-                        practiceSettingsSongStart = 0;
+                        try // Try to get these as there will be a null reference if not in practice mode or only previewing
+                        {
+                            practiceSettingsSongSpeedMul = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData
+                                .practiceSettings.songSpeedMul;
+                            practiceSettingsSongStart =
+                                BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.startSongTime - 1;
+                            if (practiceSettingsSongStart < 0)
+                            {
+                                practiceSettingsSongStart = 0;
+                            }
+                        }
+                        catch (NullReferenceException)
+                        {
+                            practiceSettingsSongSpeedMul = 1;
+                            practiceSettingsSongStart = 0;
+                        }
+
+                        float songSpeed = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.gameplayModifiers
+                            .songSpeedMul;
+                        videoPlayer.playbackSpeed =
+                            practiceSettingsSongSpeedMul != 1
+                                ? practiceSettingsSongSpeedMul
+                                : songSpeed; // Set video speed to practice or non-practice speed
+
+                        if (offsetSec + practiceSettingsSongStart > 0)
+                        {
+                            videoPlayer.time = offsetSec + practiceSettingsSongStart;
+                        }
+                        else
+                        {
+                            videoPlayer.time = 0;
+                            offsetSec += practiceSettingsSongStart;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Plugin.logger.Debug("Probably cause previews don't have speed mults");
+                        Plugin.logger.Error(e.ToString());
                     }
                 }
-                catch (NullReferenceException)
-                {
-                    practiceSettingsSongSpeedMul = 1;
-                    practiceSettingsSongStart = 0;
-                }
-                float songSpeed = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.gameplayModifiers.songSpeedMul;
-                videoPlayer.playbackSpeed = practiceSettingsSongSpeedMul != 1 ? practiceSettingsSongSpeedMul : songSpeed; // Set video speed to practice or non-practice speed
 
-                if (offsetSec + practiceSettingsSongStart > 0)
+                // videoPlayer.audioOutputMode = VideoAudioOutputMode.None; // Send Audio elsewhere
+                for (ushort track = 0; track < videoPlayer.audioTrackCount; track++) // For Each Track -> Mute Audio on that track
                 {
-                    videoPlayer.time = offsetSec + practiceSettingsSongStart;
+                    videoPlayer.SetDirectAudioMute(track, true);
+                    videoPlayer.SetDirectAudioVolume(track, 0);
                 }
-                else
-                {
-                    videoPlayer.time = 0;
-                    offsetSec += practiceSettingsSongStart;
-                }
-
-            }
-            catch (Exception e)
-            {
-                Plugin.logger.Debug("Probably cause previews don't have speed mults");
-                Plugin.logger.Error(e.ToString());
-            }
-            Plugin.logger.Debug("Offset for video: " + offsetSec);
-            if (offsetSec < 0)
-            {
-                StopAllCoroutines();
-                StartCoroutine(StartVideoDelayed(-offsetSec, sync));
             }
             else
             {
-                StopAllCoroutines();
-                StartCoroutine(StartVideoDelayed(practiceSettingsSongStart, sync));
+                // videoPlayer.audioOutputMode = VideoAudioOutputMode.Direct; // Send Audio elsewhere
             }
+
+            Plugin.logger.Debug("Offset for video: " + offsetSec);
+            StopAllCoroutines();
+            StartCoroutine(StartVideoDelayed(offsetSec < 0 ? -offsetSec : practiceSettingsSongStart, !preview));
         }
 
         private IEnumerator WaitForAudioSync()
@@ -262,7 +281,7 @@ namespace MusicVideoPlayer
                 }
 
                 ShowScreen();
-                PlayVideo(true);
+                PlayVideo(false);
             }
             else
             {
@@ -273,11 +292,10 @@ namespace MusicVideoPlayer
 
         private IEnumerator StartVideoDelayed(float startTime, bool sync)
         {
-
             // Wait
             float timeElapsed = 0;
 
-            if(sync)
+            if (sync)
             {
                 yield return new WaitUntil(() => syncController.songTime >= startTime);
             }
@@ -288,6 +306,7 @@ namespace MusicVideoPlayer
                     videoPlayer.Play();
                     yield break;
                 }
+
                 videoPlayer.frame = 0;
 
                 while (timeElapsed < -startTime)
@@ -296,12 +315,12 @@ namespace MusicVideoPlayer
                     yield return null;
                 }
             }
-            
+
             // Time has elapsed, start video
             // frames are short enough that we shouldn't notice imprecise start time
             videoPlayer.Play();
         }
-        
+
         public void PauseVideo()
         {
             StopAllCoroutines();
@@ -312,7 +331,7 @@ namespace MusicVideoPlayer
         public void ResumeVideo()
         {
             if (videoPlayer == null) return;
-            if(!videoPlayer.isPlaying) videoPlayer.Play();
+            if (!videoPlayer.isPlaying) videoPlayer.Play();
         }
 
         public void ShowScreen()
@@ -324,7 +343,7 @@ namespace MusicVideoPlayer
         {
             screen.SetActive(false);
         }
-        
+
         public void SetScale(Vector3 scale)
         {
             if (Instance.screen == null) return;
@@ -365,8 +384,9 @@ namespace MusicVideoPlayer
             if (glowShader != null) return glowShader;
             // load shader
 
-            var myLoadedAssetBundle = AssetBundle.LoadFromMemory(UIUtilities.GetResource(Assembly.GetExecutingAssembly(), "MusicVideoPlayer.Resources.mvp.bundle"));
-        
+            var myLoadedAssetBundle = AssetBundle.LoadFromMemory(
+                UIUtilities.GetResource(Assembly.GetExecutingAssembly(), "MusicVideoPlayer.Resources.mvp.bundle"));
+
             Shader shader = myLoadedAssetBundle.LoadAsset<Shader>("ScreenGlow");
             myLoadedAssetBundle.Unload(false);
             glowShader = shader;

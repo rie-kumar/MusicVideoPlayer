@@ -18,9 +18,8 @@ namespace MusicVideoPlayer.YT
         {
             searchInProgress = true;
             searchResults = new List<YTResult>();
-
             // get youtube results
-            string url = "https://www.youtube.com/results?search_query=" + search;
+            string url = "https://www.youtube.com/results?search_query=" + Uri.EscapeDataString(search); //encode to account for special characters
             WWW www = new WWW(url);
             yield return www;
 
