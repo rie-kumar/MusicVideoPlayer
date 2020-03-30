@@ -188,14 +188,12 @@ namespace MusicVideoPlayer
 
             ShowScreen();
             vsRenderer.material.color = _onColor;
-            float practiceSettingsSongSpeedMul = 1;
             float practiceSettingsSongStart = 0;
             if (!preview)
             {
                 if (instanceEnvironmentSpawnRotation != null) // will be null when previewing
                 {
-                    instanceEnvironmentSpawnRotation.didRotateEvent +=
-                        ChangeRotation360; // Set up event for running 360 video (will simply do nothing for regular video)
+                    //instanceEnvironmentSpawnRotation.didRotateEvent += ChangeRotation360; // Set up event for running 360 video (will simply do nothing for regular video)
                     try // Try to get these as errors happen when only previewing (and they are unnecessary)
                     {
                         try // Try to get these as there will be a null reference if not in practice mode or only previewing
