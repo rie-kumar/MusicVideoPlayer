@@ -171,12 +171,12 @@ namespace MusicVideoPlayer
             if (!videoPlayer.isPrepared) videoPlayer.Prepare();
             vsRenderer.material.color = Color.clear;
             //Not Sure which of these kills the audio but removing any one of them makes the audio go back on
-            videoPlayer.audioOutputMode = VideoAudioOutputMode.None; // Send Audio elsewhere
-            for (ushort track = 0; track < videoPlayer.audioTrackCount; track++) // For Each Track -> Mute Audio on that track
-            {
-                videoPlayer.SetDirectAudioMute(track, true);
-                videoPlayer.SetDirectAudioVolume(track, 0);
-            }
+            // videoPlayer.audioOutputMode = VideoAudioOutputMode.None; // Send Audio elsewhere
+            // for (ushort track = 0; track < videoPlayer.audioTrackCount; track++) // For Each Track -> Mute Audio on that track
+            // {
+            //     videoPlayer.SetDirectAudioMute(track, true);
+            //     videoPlayer.SetDirectAudioVolume(track, 0);
+            // }
             videoPlayer.Pause();
         }
 
@@ -232,22 +232,26 @@ namespace MusicVideoPlayer
                     }
                 }
 
-                // videoPlayer.audioOutputMode = VideoAudioOutputMode.None; // Send Audio elsewhere
-                // for (ushort track = 0; track < videoPlayer.audioTrackCount; track++) // For Each Track -> Mute Audio on that track
-                // {
-                //     videoPlayer.SetDirectAudioMute(track, true);
-                //     videoPlayer.SetDirectAudioVolume(track, 0);
-                // }
+                for (ushort track = 0; track < videoPlayer.audioTrackCount; track++) // For Each Track -> Decrease Audio volume to 0 on that track
+                {
+                    // videoPlayer.SetDirectAudioMute(track, true);
+                    videoPlayer.SetDirectAudioVolume(track, 0);
+                }
             }
             else
             {
-                // videoPlayer.audioOutputMode = VideoAudioOutputMode.Direct; // Send Audio elsewhere
                 videoPlayer.playbackSpeed = 1;
+                //TODO: Make Left Ear Audio the Preview and Right Ear Audio the BeatMap
+                for (ushort track = 0; track < videoPlayer.audioTrackCount; track++) // For Each Track -> Increase Audio volume to .5 (float) on that track
+                {
+                    // videoPlayer.SetDirectAudioMute(track, false);
+                    videoPlayer.SetDirectAudioVolume(track, .5f);
+                }
             }
 
             Plugin.logger.Debug("Offset for video: " + offsetSec);
             StopAllCoroutines();
-            StartCoroutine(StartVideoDelayed(offsetSec < 0 ? -offsetSec : practiceSettingsSongStart, !preview));
+            StartCoroutine(StartVideoDelayed(offsetSec < 0 ? -offsetSec : practiceSettingsSongStart, preview));
         }
 
         private IEnumerator WaitForAudioSync()
@@ -284,30 +288,28 @@ namespace MusicVideoPlayer
             }
         }
 
-        private IEnumerator StartVideoDelayed(float startTime, bool sync)
+        private IEnumerator StartVideoDelayed(float startTime, bool preview)
         {
             // Wait
             float timeElapsed = 0;
 
-            if (sync)
+            if (preview)
             {
-                yield return new WaitUntil(() => syncController.songTime >= startTime);
-            }
-            else
-            {
-                if (startTime >= 0)
+                if (startTime < 0)
                 {
                     videoPlayer.Play();
                     yield break;
                 }
-
                 videoPlayer.frame = 0;
-
-                while (timeElapsed < -startTime)
+                while (timeElapsed < startTime)
                 {
                     timeElapsed += Time.deltaTime;
                     yield return null;
                 }
+            }
+            else
+            {
+                yield return new WaitUntil(() => syncController.songTime >= startTime);
             }
 
             // Time has elapsed, start video
