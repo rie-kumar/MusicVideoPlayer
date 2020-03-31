@@ -13,7 +13,7 @@ namespace MusicVideoPlayer.Util
     {
         public static string Format(VideoQuality quality)
         {
-            String qualityString;
+            string qualityString;
             switch (quality)
             {
                 case VideoQuality.Best:
@@ -33,10 +33,10 @@ namespace MusicVideoPlayer.Util
                     break;
             }
 
-            // if (true)
-            // {
-            //     qualityString += "+bestaudio[acodec *= mp4]";
-            // }
+            if (true)
+            {
+                qualityString += "+bestaudio[acodec *= mp4]";
+            }
 
             return qualityString;
         }
