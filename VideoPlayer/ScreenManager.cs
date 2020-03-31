@@ -21,6 +21,7 @@ namespace MusicVideoPlayer
         public static ScreenManager Instance;
 
         public static bool showVideo = true;
+        public static bool playPreviewAudio = false;
         public VideoPlacement placement;
 
         private VideoData currentVideo;
@@ -64,6 +65,7 @@ namespace MusicVideoPlayer
             Instance = this;
 
             showVideo = MVPSettings.instance.ShowVideoSettings;
+            playPreviewAudio = MVPSettings.instance.PlayPreviewAudio;
             placement = MVPSettings.instance.PlacementMode;
 
             BSEvents.songPaused += PauseVideo;
@@ -170,21 +172,16 @@ namespace MusicVideoPlayer
 
             if (!videoPlayer.isPrepared) videoPlayer.Prepare();
             vsRenderer.material.color = Color.clear;
-            //Not Sure which of these kills the audio but removing any one of them makes the audio go back on
-            // videoPlayer.audioOutputMode = VideoAudioOutputMode.None; // Send Audio elsewhere
-            // for (ushort track = 0; track < videoPlayer.audioTrackCount; track++) // For Each Track -> Mute Audio on that track
-            // {
-            //     videoPlayer.SetDirectAudioMute(track, true);
-            //     videoPlayer.SetDirectAudioVolume(track, 0);
-            // }
             videoPlayer.Pause();
         }
 
         public void PlayVideo(bool preview)
         {
-            if (!showVideo) return;
-            if (currentVideo == null) return;
-            if (currentVideo.downloadState != DownloadState.Downloaded) return;
+            if (currentVideo == null || currentVideo.downloadState != DownloadState.Downloaded || (!showVideo && !preview)) //If the current video is null or not downloaded or show video is off AND it isn't a preview hide the screen
+            {
+                HideScreen();
+                return;
+            }
 
             ShowScreen();
             vsRenderer.material.color = _onColor;
@@ -235,7 +232,7 @@ namespace MusicVideoPlayer
                 for (ushort track = 0; track < videoPlayer.audioTrackCount; track++) // For Each Track -> Decrease Audio volume to 0 on that track
                 {
                     // videoPlayer.SetDirectAudioMute(track, true);
-                    videoPlayer.SetDirectAudioVolume(track, 0);
+                    videoPlayer.SetDirectAudioVolume(track, 0f);
                 }
             }
             else
@@ -245,7 +242,7 @@ namespace MusicVideoPlayer
                 for (ushort track = 0; track < videoPlayer.audioTrackCount; track++) // For Each Track -> Increase Audio volume to .5 (float) on that track
                 {
                     // videoPlayer.SetDirectAudioMute(track, false);
-                    videoPlayer.SetDirectAudioVolume(track, .5f);
+                    videoPlayer.SetDirectAudioVolume(track, playPreviewAudio ? .5f : 0f);
                 }
             }
 

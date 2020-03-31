@@ -44,6 +44,17 @@ namespace MusicVideoPlayer.UI
             }
         }
 
+        [UIValue("play-preview-audio")]
+        public bool PlayPreviewAudio
+        {
+            get => config.GetBool("General", "Play Preview Audio", false);
+            set
+            {
+                ScreenManager.playPreviewAudio = value;
+                config.SetBool("General", "Play Preview Audio", value);
+            }
+        }
+
         private VideoPlacement placementMode;
         [UIValue("screen-position")]
         public VideoPlacement PlacementMode
@@ -67,6 +78,27 @@ namespace MusicVideoPlayer.UI
                 YouTubeDownloader.Instance.quality = value; 
                 qualityMode = value;
                 config.SetString("Modes", "Video Quality", qualityMode.ToString());
+            }
+        }
+
+        [UIAction("ReDownloadAll")]
+        public void ReDownloadAll()
+        {
+            if (VideoLoader.videos != null)
+            {
+                Plugin.logger.Debug("Downloading all videos");
+                if(YouTubeDownloader.Instance)
+                {
+                    foreach (KeyValuePair<IPreviewBeatmapLevel, VideoData> videoKVP in VideoLoader.videos)
+                    {
+                        Plugin.logger.Debug($"Enqueueing {videoKVP.Value.title}");
+                        YouTubeDownloader.Instance.EnqueueVideo(videoKVP.Value);
+                    }
+                }
+                else
+                {
+                    Plugin.logger.Warn("No YTDL Instance");
+                }
             }
         }
 
