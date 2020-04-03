@@ -19,7 +19,8 @@ namespace MusicVideoPlayer.Util
 
         public bool DictionaryBeingUsed { get; private set; }
 
-        private Dictionary<IPreviewBeatmapLevel, VideoData> videos;
+        public static Dictionary<IPreviewBeatmapLevel, VideoData> videos { get; private set; }
+
 
         private HMTask _loadingTask;
         private bool _loadingCancelled;

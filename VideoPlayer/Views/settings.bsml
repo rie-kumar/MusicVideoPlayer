@@ -2,4 +2,6 @@
   <bool-setting text='Show Video' value='show-video' hover-hint='Indicates whether the video is show or not.'></bool-setting>
   <dropdown-list-setting text='Screen Position' value='screen-position' options='positions'></dropdown-list-setting>
   <dropdown-list-setting text='Download Quality' value='quality' options='modes'></dropdown-list-setting>
+  <checkbox text='Play Both Video and BeatMap Audio in Preview' value='play-preview-audio' hover-hint='When checked will play both the audio from the video and the audio from the beatmap, allowing for easier syncing'></checkbox>
+  <!-- <button text='Re-Download All Videos' on-click='ReDownloadAll' hover-hint='Re-Download All Videos -> CANNOT BE CANCELLED'></button> -->
 </settings-container>
