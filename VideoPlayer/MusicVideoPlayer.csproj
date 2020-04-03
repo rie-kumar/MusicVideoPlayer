@@ -165,6 +165,8 @@ copy /Y "$(TargetDir)MusicVideoPlayer.dll" "$(ProjectDir)zipitup\Plugins\"
 copy /Y "$(ProjectDir)YT\youtube-dl.exe" "$(ProjectDir)zipitup\Youtube-dl"
 copy /Y "$(ProjectDir)YT\ffmpeg.exe" "$(ProjectDir)zipitup\Youtube-dl"
 copy /Y "$(ProjectDir)YT\ffmpeg.exe" "D:\SteamLibrary\steamapps\common\Beat Saber\Youtube-dl"
+rem "Optional"
+copy /Y "$(ProjectDir)(Optional) Third Person Camera Files" "$(ProjectDir)zipitup(Optional) Third Person Camera Files"
 7z a "$(ProjectDir)zipitup.zip" "$(ProjectDir)zipitup\*"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
