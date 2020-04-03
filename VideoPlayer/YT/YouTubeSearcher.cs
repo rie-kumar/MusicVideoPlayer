@@ -22,6 +22,7 @@ namespace MusicVideoPlayer.YT
 
             // get youtube results
             string url = "https://www.youtube.com/results?search_query=" + Uri.EscapeDataString(search);
+            Plugin.logger.Info($"Searching with URL: {url}");
             UnityWebRequest request = UnityWebRequest.Get(url);
 
             yield return request.SendWebRequest();

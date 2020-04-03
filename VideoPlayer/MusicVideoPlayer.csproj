@@ -29,6 +29,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="BSML, Version=1.1.2.0, Culture=neutral, processorArchitecture=MSIL">
@@ -157,10 +158,13 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y "$(TargetDir)$(TargetFileName)" "D:\SteamLibrary\steamapps\common\Beat Saber\Plugins"
+    <PostBuildEvent>copy /Y "$(TargetDir)$(TargetFileName)" "D:\SteamLibrary\steamapps\common\Beat Saber\Plugins\"
+copy /Y "$(TargetDir)HtmlAgilityPack.dll" "D:\SteamLibrary\steamapps\common\Beat Saber\Libs\"
 copy /Y "$(TargetDir)HtmlAgilityPack.dll" "$(ProjectDir)zipitup\Libs\"
 copy /Y "$(TargetDir)MusicVideoPlayer.dll" "$(ProjectDir)zipitup\Plugins\"
 copy /Y "$(ProjectDir)YT\youtube-dl.exe" "$(ProjectDir)zipitup\Youtube-dl"
+copy /Y "$(ProjectDir)YT\ffmpeg.exe" "$(ProjectDir)zipitup\Youtube-dl"
+copy /Y "$(ProjectDir)YT\ffmpeg.exe" "D:\SteamLibrary\steamapps\common\Beat Saber\Youtube-dl"
 7z a "$(ProjectDir)zipitup.zip" "$(ProjectDir)zipitup\*"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

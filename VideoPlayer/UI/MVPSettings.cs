@@ -3,8 +3,12 @@ using BS_Utils.Utilities;
 using MusicVideoPlayer.Util;
 using MusicVideoPlayer.YT;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using TMPro;
+using UnityEngine;
 
 namespace MusicVideoPlayer.UI
 {
@@ -12,20 +16,18 @@ namespace MusicVideoPlayer.UI
     {
         private Config config;
 
-        [UIValue("positions")]
-        private List<object> screenPositions = (new object[] 
-        { 
-            VideoPlacement.Background, 
+        [UIValue("positions")] private List<object> screenPositions = (new object[]
+        {
+            VideoPlacement.Background,
             VideoPlacement.BackgroundLow,
-            VideoPlacement.Center, 
-            VideoPlacement.Left, 
+            VideoPlacement.Center,
+            VideoPlacement.Left,
             VideoPlacement.Right,
             VideoPlacement.Bottom,
             VideoPlacement.Top
         }).ToList();
 
-        [UIValue("modes")]
-        private List<object> qualityModes = (new object[]
+        [UIValue("modes")] private List<object> qualityModes = (new object[]
         {
             VideoQuality.Best,
             VideoQuality.High,
@@ -56,6 +58,7 @@ namespace MusicVideoPlayer.UI
         }
 
         private VideoPlacement placementMode;
+
         [UIValue("screen-position")]
         public VideoPlacement PlacementMode
         {
@@ -69,30 +72,60 @@ namespace MusicVideoPlayer.UI
         }
 
         private VideoQuality qualityMode;
+
         [UIValue("quality")]
         public VideoQuality QualityMode
         {
             get => qualityMode;
             set
             {
-                YouTubeDownloader.Instance.quality = value; 
+                YouTubeDownloader.Instance.quality = value;
                 qualityMode = value;
                 config.SetString("Modes", "Video Quality", qualityMode.ToString());
             }
         }
 
+
+
+        [UIComponent("howManyVideoDone")] private TextMeshProUGUI howManyVideosDone;
+
         [UIAction("ReDownloadAll")]
         public void ReDownloadAll()
+        {
+            StartCoroutine(DownloadAll());
+        }
+
+        public IEnumerator DownloadAll()
         {
             if (VideoLoader.videos != null)
             {
                 Plugin.logger.Debug("Downloading all videos");
-                if(YouTubeDownloader.Instance)
+                if (YouTubeDownloader.Instance)
                 {
+                    int videoCount = VideoLoader.videos.Count;
+                    int videoTotal = videoCount;
+                    howManyVideosDone.text = $"0/{VideoLoader.videos.Count}";
+                    int processCount = 0;
                     foreach (KeyValuePair<IPreviewBeatmapLevel, VideoData> videoKVP in VideoLoader.videos)
                     {
-                        Plugin.logger.Debug($"Enqueueing {videoKVP.Value.title}");
-                        YouTubeDownloader.Instance.EnqueueVideo(videoKVP.Value);
+                        var video = videoKVP.Value;
+                        string command = $"rm {VideoLoader.GetLevelPath(video.level)}\\{video.videoPath}";
+                        Process ytProcess = YouTubeDownloader.Instance.MakeYoutubeProcessAndReturnIt(video);
+                        ytProcess.Exited += (sender, e) =>
+                        {
+                            VideoLoader.SaveVideoToDisk(video);
+                            ytProcess.Dispose();
+                            --processCount;
+                            --videoTotal;
+                            Plugin.logger.Debug($"Video {video.title} downloaded {videoTotal} videos left");
+                            howManyVideosDone.text = $"{videoCount-videoTotal}/{videoCount}";
+                        };
+                        Plugin.logger.Debug($"{processCount} videos currently");
+                        yield return new WaitUntil(() => processCount < 10);
+                        ytProcess.Start();
+                        ++processCount;
+                        Plugin.logger.Debug($"Video {video.title} downloading {processCount} videos currently");
+                        yield return null;
                     }
                 }
                 else
@@ -105,15 +138,9 @@ namespace MusicVideoPlayer.UI
         public void Awake()
         {
             config = new Config("MVP");
-            if (Enum.TryParse(config.GetString("Positions", "Video Placement", "Bottom"), out VideoPlacement placementParsed))
-                placementMode = placementParsed;
-            else
-                placementMode = VideoPlacement.Bottom;
+            placementMode = Enum.TryParse(config.GetString("Positions", "Video Placement", "Bottom"), out VideoPlacement placementParsed) ? placementParsed : VideoPlacement.Bottom;
 
-            if (Enum.TryParse(config.GetString("Modes", "Video Quality", "Best"), out VideoQuality qualityParsed))
-                qualityMode = qualityParsed;
-            else
-                qualityMode = VideoQuality.Best;
+            qualityMode = Enum.TryParse(config.GetString("Modes", "Video Quality", "Best"), out VideoQuality qualityParsed) ? qualityParsed : VideoQuality.Best;
         }
     }
 }

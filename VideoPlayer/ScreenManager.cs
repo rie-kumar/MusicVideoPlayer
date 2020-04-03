@@ -4,6 +4,7 @@ using MusicVideoPlayer.Util;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -219,7 +220,6 @@ namespace MusicVideoPlayer
                         else
                         {
                             videoPlayer.time = 0;
-                            offsetSec += practiceSettingsSongStart;
                         }
                     }
                     catch (Exception e)
@@ -237,6 +237,7 @@ namespace MusicVideoPlayer
             }
             else
             {
+                videoPlayer.time = offsetSec > 0 ? offsetSec : 0;
                 videoPlayer.playbackSpeed = 1;
                 //TODO: Make Left Ear Audio the Preview and Right Ear Audio the BeatMap
                 for (ushort track = 0; track < videoPlayer.audioTrackCount; track++) // For Each Track -> Increase Audio volume to .5 (float) on that track
@@ -248,7 +249,7 @@ namespace MusicVideoPlayer
 
             Plugin.logger.Debug("Offset for video: " + offsetSec);
             StopAllCoroutines();
-            StartCoroutine(StartVideoDelayed(offsetSec < 0 ? -offsetSec : practiceSettingsSongStart, preview));
+            StartCoroutine(StartVideoDelayed(preview ? -offsetSec : -(offsetSec + practiceSettingsSongStart), preview));
         }
 
         private IEnumerator WaitForAudioSync()
@@ -289,6 +290,7 @@ namespace MusicVideoPlayer
         {
             // Wait
             float timeElapsed = 0;
+            Plugin.logger.Debug(videoPlayer.time.ToString());
 
             if (preview)
             {

@@ -1,4 +1,5 @@
-﻿using IPA;
+﻿using System;
+using IPA;
 using UnityEngine.SceneManagement;
 using MusicVideoPlayer.Util;
 using MusicVideoPlayer.UI;
@@ -6,6 +7,7 @@ using MusicVideoPlayer.YT;
 using BeatSaberMarkupLanguage.Settings;
 using BS_Utils.Utilities;
 using System.Collections;
+using System.Diagnostics;
 using UnityEngine;
 using System.Linq;
 using BeatSaberMarkupLanguage.GameplaySetup;
@@ -17,7 +19,7 @@ namespace MusicVideoPlayer
     public sealed class Plugin
     {
         public static IPA.Logging.Logger logger;
-        
+
         [Init]
         public void Init(IPA.Logging.Logger logger)
         {

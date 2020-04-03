@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MusicVideoPlayer.YT;
 using UnityEngine;
 
 namespace MusicVideoPlayer.Util
@@ -33,9 +34,9 @@ namespace MusicVideoPlayer.Util
                     break;
             }
 
-            if (true)
+            if (YouTubeDownloader.hasFFMPEG)
             {
-                qualityString += "+bestaudio[acodec *= mp4]";
+                qualityString += "+bestaudio[acodec*=mp4]";
             }
 
             return qualityString;
