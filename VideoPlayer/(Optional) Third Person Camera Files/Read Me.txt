@@ -1,0 +1,6 @@
+REQUIRES THIRD PERSON CAMERA MOD
+
+Installation: 
+1) Drag the camera script you want (only one of them) into the (Beat Saber Dir)\UserData\CameraPlus folder. 
+
+The camera script will be based on the placement mod you have the current mod set too, by default it's usually set to bottom. 
