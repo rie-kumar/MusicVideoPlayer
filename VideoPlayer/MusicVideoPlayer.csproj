@@ -166,8 +166,9 @@ copy /Y "$(ProjectDir)YT\youtube-dl.exe" "$(ProjectDir)zipitup\Youtube-dl"
 copy /Y "$(ProjectDir)YT\ffmpeg.exe" "$(ProjectDir)zipitup\Youtube-dl"
 copy /Y "$(ProjectDir)YT\ffmpeg.exe" "D:\SteamLibrary\steamapps\common\Beat Saber\Youtube-dl"
 rem "Optional"
-copy /Y "$(ProjectDir)(Optional) Third Person Camera Files" "$(ProjectDir)zipitup(Optional) Third Person Camera Files"
-7z a "$(ProjectDir)zipitup.zip" "$(ProjectDir)zipitup\*"</PostBuildEvent>
+copy /Y "$(ProjectDir)(Optional) Third Person Camera Files\" "$(ProjectDir)zipitup\(Optional) Third Person Camera Files\"
+7z a "$(ProjectDir)zipitup.zip" "$(ProjectDir)zipitup\*" -bb0
+date /t &amp;&amp; time /t</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
