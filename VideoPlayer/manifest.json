@@ -4,13 +4,13 @@
   "description": "Music Video Player is a mod that allows players to  download and have a video play in sync with the music during a beat saber level (i.e. the songs music video, a dance video of for the song)",
   "gameVersion": "1.8.0",
   "id": "Music Video Player",
-  "name": "MVP",
-  "version": "1.8.0.1",
+  "name": "Music Video Player",
+  "version": "1.8.0.2",
   "features": [
 
   ],
   "dependsOn": {
     "BS Utils": "^1.4.4",
-    "BeatSaberMarkupLanguage": "^1.2.0"
+    "BeatSaberMarkupLanguage": "^1.2.2"
   }
 }

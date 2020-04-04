@@ -29,7 +29,7 @@ namespace MusicVideoPlayer
         [OnStart]
         public void OnApplicationStart()
         {
-            BSMLSettings.instance.AddSettingsMenu("MVP", "MusicVideoPlayer.Views.settings.bsml", MVPSettings.instance);
+            BSMLSettings.instance.AddSettingsMenu("Music Video Player", "MusicVideoPlayer.Views.settings.bsml", MVPSettings.instance);
             GameplaySetup.instance.AddTab("Video", "MusicVideoPlayer.Views.video-menu.bsml", VideoMenu.instance);
             BSEvents.OnLoad();
             BSEvents.menuSceneLoadedFresh += OnMenuSceneLoadedFresh;
