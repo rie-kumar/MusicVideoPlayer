@@ -174,6 +174,7 @@ namespace MusicVideoPlayer
             LoadVideoDownloadState();
 
             Plugin.logger.Debug("Has Loaded: " + videoData);
+            Plugin.logger.Debug("Video is: " + downloadStateText.text);
             ScreenManager.Instance.PrepareVideo(videoData);
         }
 
@@ -219,6 +220,7 @@ namespace MusicVideoPlayer
             if (selectedVideo == null || selectedVideo.downloadState != DownloadState.Downloaded)
             {
                 enable = false;
+                // add download video from video.json code here
             }
 
             previewButton.interactable = enable;
@@ -345,6 +347,10 @@ namespace MusicVideoPlayer
             {
                 deleteButtonText.SetText("Cancel");
             }
+            else if (selectedVideo.downloadState == DownloadState.NotDownloaded)
+            {
+                deleteButtonText.SetText("Re-Download");
+            }
             else
             {
                 deleteButtonText.SetText("Delete");
@@ -353,7 +359,7 @@ namespace MusicVideoPlayer
 
         private void LoadVideoDownloadState()
         {
-            string state = "No Video";
+            string state = "Unknown";
 
             if (selectedVideo != null)
             {
@@ -480,6 +486,11 @@ namespace MusicVideoPlayer
                 if(selectedVideo.downloadState == DownloadState.Downloading)
                 {
                     YouTubeDownloader.Instance.DequeueVideo(selectedVideo);
+                }
+                else if(selectedVideo.downloadState == DownloadState.NotDownloaded) // Download from video.json if only video not there
+                {
+                    YouTubeDownloader.Instance.EnqueueVideo(selectedVideo);
+                    //VideoLoader.Instance.AddVideo(selectedVideo);
                 }
                 else
                 {
