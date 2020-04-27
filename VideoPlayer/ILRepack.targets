@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="ILRepack" AfterTargets="Build" BeforeTargets="PostBuildEvent" Condition="'$(NCrunch)' != '1'" >
+    <PropertyGroup>
+      <WorkingDirectory>$(OutputPath)</WorkingDirectory>
+    </PropertyGroup>
+    <ItemGroup>
+      <InputAssemblies Include="HtmlAgilityPack.dll" />
+    </ItemGroup>
+    <ItemGroup>
+      <!-- Must be a fully qualified name -->
+      <!-- <DoNotInternalizeAssemblies Include="System.Threading.Tasks.Dataflow.dll" /> -->
+    </ItemGroup>
+
+    <ILRepack
+        Parallel="true"
+        Internalize="true"
+        InternalizeExcludeAssemblies="@(DoNotInternalizeAssemblies)"
+        MainAssembly="$(AssemblyName).dll"
+        OutputAssembly="$(AssemblyName).dll"
+        InputAssemblies="@(InputAssemblies)"
+        OutputType="Dll"
+        Verbose="false"
+        DebugInfo="true"
+        TargetPlatformVersion="v4"
+        WorkingDirectory="$(WorkingDirectory)"
+    />
+  </Target>
+</Project>
+<!-- /ILRepack -->
