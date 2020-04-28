@@ -163,14 +163,22 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="ILRepack.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y "$(TargetDir)$(TargetFileName)" "D:\SteamLibrary\steamapps\common\Beat Saber\Plugins\"
-copy /Y "$(TargetDir)MusicVideoPlayer.dll" "$(ProjectDir)zipitup\Plugins\"
+    <PostBuildEvent>echo "Start Post Build"
+rmdir /s /q "$(ProjectDir)zipitup"
+mkdir "$(ProjectDir)zipitup"
+mkdir "$(ProjectDir)zipitup\Youtube-dl"
+mkdir "$(ProjectDir)zipitup\Plugins"
+mkdir "$(ProjectDir)zipitup\(Optional) Third Person Camera Files\"
+rem PING -n 5 127.0.0.1&gt;nul
 copy /Y "$(ProjectDir)YT\youtube-dl.exe" "$(ProjectDir)zipitup\Youtube-dl"
 copy /Y "$(ProjectDir)YT\ffmpeg.exe" "$(ProjectDir)zipitup\Youtube-dl"
-copy /Y "$(ProjectDir)YT\ffmpeg.exe" "D:\SteamLibrary\steamapps\common\Beat Saber\Youtube-dl"
 rem "Optional"
 copy /Y "$(ProjectDir)(Optional) Third Person Camera Files\" "$(ProjectDir)zipitup\(Optional) Third Person Camera Files\"
-rm $(ProjectDir)zipitup.zip
+rem "End Optional"
+copy /Y "$(ProjectDir)YT\ffmpeg.exe" "D:\SteamLibrary\steamapps\common\Beat Saber\Youtube-dl"
+copy /Y "$(TargetDir)$(TargetFileName)" "D:\SteamLibrary\steamapps\common\Beat Saber\Plugins\"
+copy /Y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)zipitup\Plugins\"
+del $(ProjectDir)zipitup.zip
 7z a "$(ProjectDir)zipitup.zip" "$(ProjectDir)zipitup\*" -bb0
 date /t &amp;&amp; time /t</PostBuildEvent>
   </PropertyGroup>
