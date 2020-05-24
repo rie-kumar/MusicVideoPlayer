@@ -32,11 +32,11 @@ namespace MusicVideoPlayer
             BSMLSettings.instance.AddSettingsMenu("Music Video Player", "MusicVideoPlayer.Views.settings.bsml", MVPSettings.instance);
             GameplaySetup.instance.AddTab("Video", "MusicVideoPlayer.Views.video-menu.bsml", VideoMenu.instance);
             BSEvents.OnLoad();
-            BSEvents.menuSceneLoadedFresh += OnMenuSceneLoadedFresh;
+            BSEvents.lateMenuSceneLoadedFresh += OnMenuSceneLoadedFresh;
             Base64Sprites.ConvertToSprites();
         }
 
-        private void OnMenuSceneLoadedFresh()
+        private void OnMenuSceneLoadedFresh(ScenesTransitionSetupDataSO scenesTransition)
         {
             YouTubeDownloader.OnLoad();
             ScreenManager.OnLoad();
@@ -47,7 +47,7 @@ namespace MusicVideoPlayer
         [OnExit]
         public void OnApplicationQuit()
         {
-            BSEvents.menuSceneLoadedFresh -= OnMenuSceneLoadedFresh;
+            BSEvents.lateMenuSceneLoadedFresh -= OnMenuSceneLoadedFresh;
             YouTubeDownloader.Instance.OnApplicationQuit();
         }
 

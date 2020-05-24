@@ -71,7 +71,7 @@ namespace MusicVideoPlayer
 
             BSEvents.songPaused += PauseVideo;
             BSEvents.songUnpaused += ResumeVideo;
-            BSEvents.menuSceneLoadedFresh += OnMenuSceneLoaded;
+            BSEvents.lateMenuSceneLoadedFresh += OnMenuSceneLoadedFresh;
             BSEvents.menuSceneLoaded += OnMenuSceneLoaded;
 
             DontDestroyOnLoad(gameObject);
@@ -125,6 +125,13 @@ namespace MusicVideoPlayer
             videoPlayer.errorReceived += VideoPlayerErrorReceived;
 
             OnMenuSceneLoaded();
+        }
+
+        private void OnMenuSceneLoadedFresh(ScenesTransitionSetupDataSO scenesTransition)
+        {
+            if (currentVideo != null) PrepareVideo(currentVideo);
+            PauseVideo();
+            //HideScreen();
         }
 
         private void OnMenuSceneLoaded()
@@ -244,6 +251,8 @@ namespace MusicVideoPlayer
                 {
                     // videoPlayer.SetDirectAudioMute(track, false);
                     videoPlayer.SetDirectAudioVolume(track, playPreviewAudio ? .5f : 0f);
+                    Plugin.logger.Info($"Track: {track}");
+                    Plugin.logger.Info($"Channels: {videoPlayer.GetAudioChannelCount(track)}");
                 }
             }
 
