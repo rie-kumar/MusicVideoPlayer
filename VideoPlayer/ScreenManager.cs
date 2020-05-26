@@ -123,9 +123,15 @@ namespace MusicVideoPlayer
             videoPlayer.targetMaterialRenderer = vsRenderer;
             vsRenderer.material.SetTexture("_MainTex", videoPlayer.texture);
             videoPlayer.errorReceived += VideoPlayerErrorReceived;
+            //videoPlayer.prepareCompleted += VideoPrepared;
 
             OnMenuSceneLoaded();
         }
+
+        //private void VideoPrepared(VideoPlayer source)
+        //{
+        //    source.
+        //}
 
         private void OnMenuSceneLoadedFresh(ScenesTransitionSetupDataSO scenesTransition)
         {

@@ -6,6 +6,7 @@
     </PropertyGroup>
     <ItemGroup>
       <InputAssemblies Include="HtmlAgilityPack.dll" />
+      <InputAssemblies Include="System.Text.Json.dll" />
     </ItemGroup>
     <ItemGroup>
       <!-- Must be a fully qualified name -->

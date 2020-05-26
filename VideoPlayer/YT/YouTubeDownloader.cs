@@ -144,15 +144,9 @@ namespace MusicVideoPlayer.YT
         
         private IEnumerator DownloadVideo()
         {
-            Plugin.logger.Debug($"Starting Download");
             downloading = true;
-            Plugin.logger.Debug($"Starting Download");
-
             if (!updated) yield return new WaitUntil(() => updated);
-            Plugin.logger.Debug($"Starting Download2");
-            
             VideoDownload download = videoQueue.Peek();
-            Plugin.logger.Debug($"Starting Download3");
             VideoData video = download.video;
             Plugin.logger.Debug($"Starting Download with {download.video.title}");
 
@@ -178,13 +172,10 @@ namespace MusicVideoPlayer.YT
             Plugin.logger.Info("Downloading: " + video.title);
 
             StopCoroutine(Countdown(download));
-            Plugin.logger.Debug($"Counting");
 
             video.downloadState = DownloadState.Downloading;
             downloadProgress?.Invoke(video);
-            Plugin.logger.Debug($"Invoked");
             download.Update();
-            Plugin.logger.Debug($"Updated");
 
             ydl = MakeYoutubeProcessAndReturnIt(video);
 

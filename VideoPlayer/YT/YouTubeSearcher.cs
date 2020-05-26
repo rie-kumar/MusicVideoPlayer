@@ -21,7 +21,7 @@ namespace MusicVideoPlayer.YT
             searchResults = new List<YTResult>();
 
             // get youtube results
-            string url = "https://www.youtube.com/results?search_query=" + Uri.EscapeDataString(search);
+            string url = "https://www.youtube.com/results?disable_polymer=true&search_query=" + Uri.EscapeDataString(search);
             Plugin.logger.Info($"Searching with URL: {url}");
             UnityWebRequest request = UnityWebRequest.Get(url);
 
@@ -41,7 +41,7 @@ namespace MusicVideoPlayer.YT
             var videoNodes = doc.DocumentNode.SelectNodes("//*[contains(concat(' ', @class, ' '),'yt-lockup-video')]");
             if (videoNodes == null)
             {
-                Plugin.logger.Info("[MVP] Search: No results found matching: " + search);
+                Plugin.logger.Info("Search: No results found matching: " + search);
             }
             else
             {

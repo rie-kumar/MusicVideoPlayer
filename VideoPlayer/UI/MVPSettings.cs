@@ -1,5 +1,6 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
 using BS_Utils.Utilities;
+using ModestTree;
 using MusicVideoPlayer.Util;
 using MusicVideoPlayer.YT;
 using System;
@@ -97,35 +98,37 @@ namespace MusicVideoPlayer.UI
 
         public IEnumerator DownloadAll()
         {
-            if (VideoLoader.videos != null)
+            if (VideoLoader.levelsVideos != null)
             {
                 Plugin.logger.Debug("Downloading all videos");
                 if (YouTubeDownloader.Instance)
                 {
-                    int videoCount = VideoLoader.videos.Count;
-                    int videoTotal = videoCount;
-                    howManyVideosDone.text = $"0/{VideoLoader.videos.Count}";
+                    int levelCount = VideoLoader.levelsVideos.Count;
+                    int levelTotal = levelCount;
+                    howManyVideosDone.text = $"0/{VideoLoader.levelsVideos.Count}";
                     int processCount = 0;
-                    foreach (KeyValuePair<IPreviewBeatmapLevel, VideoData> videoKVP in VideoLoader.videos)
+                    foreach (KeyValuePair<IPreviewBeatmapLevel, VideoDatas> videoKVP in VideoLoader.levelsVideos)
                     {
-                        var video = videoKVP.Value;
-                        string command = $"rm {VideoLoader.GetLevelPath(video.level)}\\{video.videoPath}";
-                        Process ytProcess = YouTubeDownloader.Instance.MakeYoutubeProcessAndReturnIt(video);
-                        ytProcess.Exited += (sender, e) =>
+                        foreach (VideoData video in videoKVP.Value.videos)
                         {
-                            VideoLoader.SaveVideoToDisk(video);
-                            ytProcess.Dispose();
-                            --processCount;
-                            --videoTotal;
-                            Plugin.logger.Debug($"Video {video.title} downloaded {videoTotal} videos left");
-                            howManyVideosDone.text = $"{videoCount-videoTotal}/{videoCount}";
-                        };
-                        Plugin.logger.Debug($"{processCount} videos currently");
-                        yield return new WaitUntil(() => processCount < 10);
-                        ytProcess.Start();
-                        ++processCount;
-                        Plugin.logger.Debug($"Video {video.title} downloading {processCount} videos currently");
-                        yield return null;
+                            string command = $"rm {VideoLoader.GetLevelPath(video.level)}\\{video.videoPath}";
+                            Process ytProcess = YouTubeDownloader.Instance.MakeYoutubeProcessAndReturnIt(video);
+                            ytProcess.Exited += (sender, e) =>
+                            {
+                                VideoLoader.SaveVideosToDisk(videoKVP.Value);
+                                ytProcess.Dispose();
+                                --processCount;
+                                --levelTotal;
+                                Plugin.logger.Debug($"Video {video.title} downloaded {levelTotal} videos left");
+                                howManyVideosDone.text = $"{levelCount - levelTotal}/{levelCount}";
+                            };
+                            Plugin.logger.Debug($"{processCount} videos currently");
+                            yield return new WaitUntil(() => processCount < 10);
+                            ytProcess.Start();
+                            ++processCount;
+                            Plugin.logger.Debug($"Video {video.title} downloading {processCount} videos currently");
+                            yield return null;
+                        }
                     }
                 }
                 else

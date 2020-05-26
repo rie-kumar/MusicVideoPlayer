@@ -38,6 +38,9 @@ namespace MusicVideoPlayer
         #endregion
 
         #region Text Mesh Pro
+        [UIComponent("video-title")]
+        private TextMeshProUGUI videoTitleText;
+
         [UIComponent("current-video-title")]
         private TextMeshProUGUI currentVideoTitleText;
 
@@ -52,6 +55,9 @@ namespace MusicVideoPlayer
 
         [UIComponent("delete-button")]
         private TextMeshProUGUI deleteButtonText;
+
+        [UIComponent("add-button")]
+        private TextMeshProUGUI addButtonText;
 
         [UIComponent("search-results-loading")]
         private TextMeshProUGUI searchResultsLoadingText;
@@ -79,6 +85,9 @@ namespace MusicVideoPlayer
         [UIComponent("delete-button")]
         private Button deleteButton;
 
+        [UIComponent("add-button")]
+        private Button addButton;
+
         [UIComponent("download-button")]
         private Button downloadButton;
 
@@ -98,12 +107,13 @@ namespace MusicVideoPlayer
         [UIComponent("search-keyboard")]
         private ModalKeyboard searchKeyboard;
 
+        #region Params
         [UIParams]
         private BSMLParserParams parserParams;
 
         private Vector3 videoPlayerDetailScale = new Vector3(0.57f, 0.57f, 1f);
 
-        private Vector3 videoPlayerDetailPosition = new Vector3(-2.35f, 1.7f, 1.3f);
+        private Vector3 videoPlayerDetailPosition = new Vector3(-2.35f, 1.5f, 1.3f);
 
         private VideoData selectedVideo;
 
@@ -122,6 +132,7 @@ namespace MusicVideoPlayer
         private IEnumerator updateSearchResultsCoroutine = null;
 
         private int selectedCell;
+        #endregion
         #endregion
 
         public void OnLoad()
@@ -149,20 +160,26 @@ namespace MusicVideoPlayer
         #region Public Methods
         public void LoadVideoSettings(VideoData videoData)
         {
+            LoadVideoSettings(videoData, true);
+        }
+        public void LoadVideoSettings(VideoData videoData, bool checkForVideo)
+        {
             StopPreview(false);
 
-            if(videoData == null && selectedLevel != null)
+            if(videoData == null && selectedLevel != null && checkForVideo)
             {
-                videoData = VideoLoader.Instance.GetVideo(selectedLevel);
+                var videoDatas = VideoLoader.Instance.GetVideos(selectedLevel);
+                videoData = videoDatas == null ? null : videoDatas.GetActiveVideo();
             }
 
             selectedVideo = videoData;
 
             if (videoData != null)
             {
-                currentVideoTitleText.text = $"[{videoData.duration}] {videoData.title} by {videoData.author}";
-                currentVideoDescriptionText.text = videoData.description;
-                currentVideoOffsetText.text = videoData.offset.ToString();
+                videoTitleText.text = selectedVideo.title;
+                currentVideoTitleText.text = $"[{selectedVideo.duration}] {selectedVideo.title} by {selectedVideo.author}";
+                currentVideoDescriptionText.text = selectedVideo.description;
+                currentVideoOffsetText.text = selectedVideo.offset.ToString();
                 EnableButtons(true);
                 UpdateLooping();
             }
@@ -173,13 +190,14 @@ namespace MusicVideoPlayer
 
             LoadVideoDownloadState();
 
-            Plugin.logger.Debug("Has Loaded: " + videoData);
+            Plugin.logger.Debug("Has Loaded: " + selectedVideo);
             Plugin.logger.Debug("Video is: " + downloadStateText.text);
-            ScreenManager.Instance.PrepareVideo(videoData);
+            ScreenManager.Instance.PrepareVideo(selectedVideo);
         }
 
         public void ClearSettings()
         {
+            videoTitleText.text = "No Video";
             currentVideoTitleText.text = "NO VIDEO SET";
             currentVideoDescriptionText.text = "";
             currentVideoOffsetText.text = "N/A";
@@ -200,6 +218,7 @@ namespace MusicVideoPlayer
             isActive = false;
             selectedVideo = null;
 
+            videoTitleText.text = "No Video";
             currentVideoTitleText.text = "NO VIDEO SET";
             currentVideoDescriptionText.text = "";
             currentVideoOffsetText.text = "N/A";
@@ -216,11 +235,12 @@ namespace MusicVideoPlayer
             offsetIncreaseButton.interactable = enable;
             loopingButton.interactable = enable;
             deleteButton.interactable = enable;
+            addButton.interactable = enable;
 
             if (selectedVideo == null || selectedVideo.downloadState != DownloadState.Downloaded)
             {
                 enable = false;
-                // add download video from video.json code here
+                //TODO: add option to download video from video.json code here, may cause lag at loading if downloading too many
             }
 
             previewButton.interactable = enable;
@@ -321,6 +341,10 @@ namespace MusicVideoPlayer
 
         private void UpdateOffset(bool isDecreasing)
         {
+            if (isPreviewing)
+            {
+                StopPreview(true);
+            }
             if (selectedVideo != null)
             {
                 int magnitude = isOffsetInSeconds ? 1000 : 100;
@@ -443,6 +467,40 @@ namespace MusicVideoPlayer
         #endregion
 
         #region Actions
+        [UIAction("prev-video-action")]
+        private void PrevVideoAction()
+        {
+            VideoDatas videoDatas = VideoLoader.Instance.GetVideos(selectedLevel);
+            if(videoDatas.activeVideo == 0)
+            {
+                videoDatas.activeVideo = videoDatas.Count - 1;
+            } else
+            {
+                --videoDatas.activeVideo;
+            }
+            
+            ChangeView(false);
+            LoadVideoSettings(videoDatas.GetActiveVideo());
+            Save();
+        }
+        [UIAction("next-video-action")]
+        private void NextVideoAction()
+        {
+            VideoDatas videoDatas = VideoLoader.Instance.GetVideos(selectedLevel);
+            if (videoDatas.activeVideo == videoDatas.Count-1)
+            {
+                videoDatas.activeVideo = 0;
+            }
+            else
+            {
+                ++videoDatas.activeVideo;
+            }
+
+            ChangeView(false);
+            LoadVideoSettings(videoDatas.GetActiveVideo());
+            Save();
+        }
+
         [UIAction("on-looping-action")]
         private void OnLoopingAction()
         {
@@ -483,21 +541,43 @@ namespace MusicVideoPlayer
         {
             if(selectedVideo != null)
             {
+                bool loadNull = true;
+                Plugin.logger.Debug(selectedVideo.downloadState.ToString());
                 if(selectedVideo.downloadState == DownloadState.Downloading)
                 {
                     YouTubeDownloader.Instance.DequeueVideo(selectedVideo);
                 }
                 else if(selectedVideo.downloadState == DownloadState.NotDownloaded) // Download from video.json if only video not there
                 {
+                    Plugin.logger.Debug("Re-Downloading");
                     YouTubeDownloader.Instance.EnqueueVideo(selectedVideo);
                     //VideoLoader.Instance.AddVideo(selectedVideo);
                 }
                 else
                 {
-                    VideoLoader.Instance.DeleteVideo(selectedVideo);
+                    loadNull = VideoLoader.Instance.DeleteVideo(selectedVideo);
                 }
+                if (loadNull)
+                {
+                    LoadVideoSettings(null);
+                }
+                else
+                {
+                    PrevVideoAction();
+                }
+            }
+        }
 
-                LoadVideoSettings(null);
+        [UIAction("on-add-action")]
+        private void OnAddAction()
+        {
+            if (isPreviewing)
+            {
+                StopPreview(true);
+            }
+            if (selectedVideo != null)
+            {
+                LoadVideoSettings(null, false);
             }
         }
 
