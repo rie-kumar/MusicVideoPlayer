@@ -103,6 +103,16 @@ namespace MusicVideoPlayer.YT
             downloadProgress?.Invoke(video);
         }
 
+        private string EscapeStringForPythonStringFormatter(string input)
+        {
+            string[] replaces = {"%", "{", "}"};
+            foreach (string replaceChar in replaces)
+            {
+                input = input.Replace(replaceChar, replaceChar + replaceChar);
+            }
+            return input;
+        }
+
         public Process MakeYoutubeProcessAndReturnIt(VideoData video)
         {
             string levelPath = VideoLoader.GetLevelPath(video.level);
@@ -128,14 +138,15 @@ namespace MusicVideoPlayer.YT
                     Arguments = "https://www.youtube.com" + video.URL +
                                 " -f \"" + VideoQualitySetting.Format(quality) + "\"" + // Formats
                                 " --no-cache-dir" + // Don't use temp storage
-                                " -o \"" + levelPath + $"\\{videoFileName}.%(ext)s\"" +
+                                $" -o \"{EscapeStringForPythonStringFormatter(videoFileName)}.%(ext)s\"" +
                                 " --no-playlist" + // Don't download playlists, only the first video
                                 " --no-part" + // Don't store download in parts, write directly to file
                                 (hasFFMPEG ? " --recode-video mp4" : ""),
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    WorkingDirectory = levelPath
                 },
                 EnableRaisingEvents = true
             };
