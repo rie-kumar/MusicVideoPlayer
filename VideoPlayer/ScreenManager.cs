@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using ModestTree;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Video;
@@ -253,13 +254,20 @@ namespace MusicVideoPlayer
                 videoPlayer.time = offsetSec > 0 ? offsetSec : 0;
                 videoPlayer.playbackSpeed = 1;
                 //TODO: Make Left Ear Audio the Preview and Right Ear Audio the BeatMap
+                //ushort videoTrack = 1;
                 for (ushort track = 0; track < videoPlayer.audioTrackCount; track++) // For Each Track -> Increase Audio volume to .5 (float) on that track
                 {
-                    // videoPlayer.SetDirectAudioMute(track, false);
-                    videoPlayer.SetDirectAudioVolume(track, playPreviewAudio ? .5f : 0f);
+                    //if (track != videoTrack) { videoPlayer.SetDirectAudioVolume(track, 0f); continue;}
+                    videoPlayer.SetDirectAudioVolume(track, playPreviewAudio ? .8f : 0f);
                     Plugin.logger.Info($"Track: {track}");
                     Plugin.logger.Info($"Channels: {videoPlayer.GetAudioChannelCount(track)}");
+
+                    // videoPlayer.SetDirectAudioMute(track, false);
                 }
+
+                //int previewTracks = VideoMenu.songPreviewPlayer.GetPrivateField<int>("_channelsCount");
+                //VideoMenu.songPreviewPlayer.SetPrivateField("_channelsCount", 1);
+                //VideoMenu.songPreviewPlayer.Update();
             }
 
             Plugin.logger.Debug("Offset for video: " + offsetSec);

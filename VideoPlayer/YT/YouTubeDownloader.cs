@@ -34,11 +34,24 @@ namespace MusicVideoPlayer.YT
             }
         }
 
-        const float TimeoutDuration = 10;
+        public uint VideosDownloading { get; private set; }
+
+        public uint IncrementDownloadCount()
+        {
+            return ++VideosDownloading;
+
+        }
+        public uint DecrementDownloadCount()
+        {
+            return --VideosDownloading;
+
+        }
+
+        const float TimeoutDuration = 20;
         const int MaxRetries = 3;
 
         public event Action<VideoData> downloadProgress;
-        
+
         public VideoQuality quality = VideoQuality.Medium;
 
         Queue<VideoDownload> videoQueue;
@@ -49,11 +62,13 @@ namespace MusicVideoPlayer.YT
         Process ydl;
 
         public static YouTubeDownloader Instance = null;
+
         public static void OnLoad()
         {
             if (!Instance)
             {
                 Instance = new GameObject("YoutubeDownloader").AddComponent<YouTubeDownloader>();
+                Instance.VideosDownloading = 0;
                 DontDestroyOnLoad(Instance);
                 Instance.videoQueue = new Queue<VideoDownload>();
                 Instance.quality = MVPSettings.instance.QualityMode;
@@ -68,10 +83,10 @@ namespace MusicVideoPlayer.YT
                         {
                             FileName = Environment.CurrentDirectory + "/Youtube-dl/ffmpeg.exe",
                             Arguments = "-version",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
                         }
                     };
                     ffmpegProcess.Start();
@@ -110,6 +125,7 @@ namespace MusicVideoPlayer.YT
             {
                 input = input.Replace(replaceChar, replaceChar + replaceChar);
             }
+
             return input;
         }
 
@@ -117,7 +133,7 @@ namespace MusicVideoPlayer.YT
         {
             string levelPath = VideoLoader.GetLevelPath(video.level);
             if (!Directory.Exists(levelPath)) Directory.CreateDirectory(levelPath);
-            
+
             string videoFileName = video.title;
             // Strip invalid characters
             foreach (var c in Path.GetInvalidFileNameChars())
@@ -129,6 +145,8 @@ namespace MusicVideoPlayer.YT
 
             video.videoPath = videoFileName + ".mp4";
 
+
+            Plugin.logger.Info("Name Created");
             // Download the video via youtube-dl 
             var ytProcess = new Process
             {
@@ -141,45 +159,206 @@ namespace MusicVideoPlayer.YT
                                 $" -o \"{EscapeStringForPythonStringFormatter(videoFileName)}.%(ext)s\"" +
                                 " --no-playlist" + // Don't download playlists, only the first video
                                 " --no-part" + // Don't store download in parts, write directly to file
-                                (hasFFMPEG ? " --recode-video mp4" : ""),
+                                (hasFFMPEG
+                                    ? " --recode-video mp4"
+                                    : ""
+                                ) + //Try to recode the video if ffmpeg is installed to fix issue with improper encoding
+                                " --no-mtime" + //Video last modified will be when it was downloaded, not when it was uploaded to youtube
+                                " --socket-timeout 10" + //Retry if no response in 10 seconds Note: Not if download takes more than 10 seconds but if the time between any 2 messages from the server is 10 seconds
+                                " --no-continue" //overwrite existing file and force re-download
+                    ,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,
                     WorkingDirectory = levelPath
                 },
-                EnableRaisingEvents = true
+                EnableRaisingEvents = true,
+                //I think these are added only after Process Started
+                //PriorityClass = ProcessPriorityClass.RealTime,
+                //PriorityBoostEnabled = true
             };
+
             return ytProcess;
         }
-        
+
+        public Process MakeDebugYoutubeProcessAndReturnIt(VideoData video)
+        {
+            string levelPath = VideoLoader.GetLevelPath(video.level);
+            if (!Directory.Exists(levelPath)) Directory.CreateDirectory(levelPath);
+
+            string videoFileName = video.title;
+            // Strip invalid characters
+            foreach (var c in Path.GetInvalidFileNameChars())
+            {
+                videoFileName = videoFileName.Replace(c, '-');
+            }
+            videoFileName = videoFileName.Replace('\\', '-');
+            videoFileName = videoFileName.Replace('/', '-');
+
+            video.videoPath = videoFileName + ".mp4";
+
+
+            Plugin.logger.Info("Name Created");
+            // Download the video via youtube-dl 
+            var ytProcess = new Process
+            {
+                StartInfo =
+                {
+                    FileName = Environment.CurrentDirectory + "/Youtube-dl/youtube-dl.exe",
+                    Arguments = "https://www.youtube.com" + video.URL +
+                                " -f \"" + VideoQualitySetting.Format(quality) + "\"" + // Formats
+                                " --no-cache-dir" + // Don't use temp storage
+                                $" -o \"{EscapeStringForPythonStringFormatter(videoFileName)}.%(ext)s\"" +
+                                " --no-playlist" + // Don't download playlists, only the first video
+                                " --no-part" + // Don't store download in parts, write directly to file
+                                (hasFFMPEG
+                                    ? " --recode-video mp4"
+                                    : ""
+                                ) + //Try to recode the video if ffmpeg is installed to fix issue with improper encoding
+                                " --no-mtime" + //Video last modified will be when it was downloaded, not when it was uploaded to youtube
+                                " --socket-timeout 10" + //Retry if no response in 10 seconds Note: Not if download takes more than 10 seconds but if the time between any 2 messages from the server is 10 seconds
+                                " --no-continue" //overwrite existing file and force re-download
+                    ,
+                    RedirectStandardOutput = false,
+                    RedirectStandardError = false,
+                    UseShellExecute = true,
+                    CreateNoWindow = true,
+                    WorkingDirectory = levelPath
+                },
+                EnableRaisingEvents = true,
+                //I think these are added only after Process Started
+                //PriorityClass = ProcessPriorityClass.RealTime,
+                //PriorityBoostEnabled = true
+            };
+
+            return ytProcess;
+        }
+
+        public void StartDownload(VideoData video, bool logProgress = true)
+        {
+            video.downloadState = DownloadState.Queued;
+            downloadProgress?.Invoke(video);
+            StartCoroutine(DownloadVideo(video, logProgress));
+        }
+
+        //Must Call using StartRoutine
+        private IEnumerator DownloadVideo(VideoData video, bool logProgress = true)
+        {
+            Plugin.logger.Info($"Starting Download with {video.title}");
+            IncrementDownloadCount();
+            if (!updated) yield return new WaitUntil(() => updated);
+            //Plugin.logger.Debug("Update Finished");
+            if (video.downloadState == DownloadState.Cancelled)
+            {
+//                Plugin.logger.Debug("Download Cancelled");
+                yield return null;
+            }
+            else
+            {
+                Plugin.logger.Info("Downloading: " + video.title);
+
+                video.downloadState = DownloadState.Downloading;
+//                Plugin.logger.Debug("Set State");
+                downloadProgress?.Invoke(video);
+//                Plugin.logger.Debug("Invoked");
+
+                Process localDownloader = MakeYoutubeProcessAndReturnIt(video);
+
+                Plugin.logger.Info($"yt command: {localDownloader.StartInfo.FileName} {localDownloader.StartInfo.Arguments}");
+
+                localDownloader.Start();
+
+//                Plugin.logger.Debug("Started Downloaded For Realsies");
+                // Hook up our output to console
+                localDownloader.BeginOutputReadLine();
+                localDownloader.BeginErrorReadLine();
+
+                localDownloader.OutputDataReceived += (sender, e) =>
+                {
+                    if (e.Data != null)
+                    {
+                        Regex rx = new Regex(@"(\d*).\d%+");
+                        Match match = rx.Match(e.Data);
+                        if (match.Success)
+                        {
+                            video.downloadProgress =
+                                float.Parse(match.Value.Substring(0, match.Value.Length - 1)) / 100;
+                            downloadProgress?.Invoke(video);
+
+                            if (video.downloadState == DownloadState.Cancelled)
+                            {
+                                (sender as Process).Kill();
+                                Plugin.logger.Info("Cancelled");
+                                VideoLoader.Instance.DeleteVideo(video, false);
+                            }
+                        }
+
+                        if(logProgress) Plugin.logger.Info(e.Data);
+                    }
+                };
+                localDownloader.ErrorDataReceived += (sender, e) =>
+                {
+                    if (e.Data.Length < 3) return;
+                    Plugin.logger.Error(e.Data);
+                    //TODO: check these errors are problems - re-download or skip file when an error occurs
+                    //video.downloadState = DownloadState.Cancelled;
+                    downloadProgress?.Invoke(video);
+                    if (video.downloadState == DownloadState.Cancelled)
+                    {
+                        (sender as Process).Kill();
+                    }
+                };
+                localDownloader.Exited += (sender, e) =>
+                {
+                    DecrementDownloadCount();
+                    if (video.downloadState == DownloadState.Cancelled)
+                    {
+                        Plugin.logger.Info("Cancelled");
+                        VideoLoader.Instance.DeleteVideo(video, false);
+                    }
+                    else
+                    {
+                        video.downloadState = DownloadState.Downloaded;
+                        VideoLoader.SaveVideoToDisk(video);
+                        StartCoroutine(VerifyDownload(video));
+                        Plugin.logger.Info($"Done Downloading {video.title} with {VideosDownloading} remaining downloads");
+                    }
+
+                    localDownloader.Dispose();
+                };
+            }
+        }
+
         private IEnumerator DownloadVideo()
         {
             downloading = true;
+            IncrementDownloadCount();
             if (!updated) yield return new WaitUntil(() => updated);
             VideoDownload download = videoQueue.Peek();
             VideoData video = download.video;
-            Plugin.logger.Debug($"Starting Download with {download.video.title}");
+//            Plugin.logger.Debug($"Starting Download with {video.title}");
 
             if (video.downloadState == DownloadState.Cancelled || download.downloadAttempts > MaxRetries)
             {
                 // skip
                 videoQueue.Dequeue();
-                
+
                 if (videoQueue.Count > 0)
                 {
-                    Plugin.logger.Debug($"Starting Next Download");
+//                    Plugin.logger.Debug($"Starting Next Download");
                     // Start next download
                     DownloadVideo();
                 }
                 else
                 {
-                    Plugin.logger.Debug($"Done Download");
+//                    Plugin.logger.Debug($"Done Download");
                     // queue empty
                     downloading = false;
                     yield break;
                 }
             }
+
             Plugin.logger.Info("Downloading: " + video.title);
 
             StopCoroutine(Countdown(download));
@@ -190,15 +369,16 @@ namespace MusicVideoPlayer.YT
 
             ydl = MakeYoutubeProcessAndReturnIt(video);
 
-            Plugin.logger.Debug($"yt command: {ydl.StartInfo.FileName} {ydl.StartInfo.Arguments}");
+            Plugin.logger.Info($"yt command: {ydl.StartInfo.FileName} {ydl.StartInfo.Arguments}");
 
             ydl.Start();
-            
+
             // Hook up our output to console
             ydl.BeginOutputReadLine();
             ydl.BeginErrorReadLine();
 
-            ydl.OutputDataReceived += (sender, e) => {
+            ydl.OutputDataReceived += (sender, e) =>
+            {
                 if (e.Data != null)
                 {
                     Regex rx = new Regex(@"(\d*).\d%+");
@@ -209,30 +389,38 @@ namespace MusicVideoPlayer.YT
                         downloadProgress?.Invoke(video);
                         download.Update();
 
-                        if(video.downloadState == DownloadState.Cancelled)
+                        if (video.downloadState == DownloadState.Cancelled)
                         {
-                            (sender as Process).Kill();
+                            ((Process) sender).Kill();
                         }
                     }
+
                     Plugin.logger.Info(e.Data);
                 }
             };
 
-            ydl.ErrorDataReceived += (sender, e) => {
+            ydl.ErrorDataReceived += (sender, e) =>
+            {
                 if (e.Data.Length < 3) return;
+                Plugin.logger.Error(e.Data);
                 //TODO: check these errors are problems - re-download or skip file when an error occurs
                 //video.downloadState = DownloadState.Cancelled;
                 downloadProgress?.Invoke(video);
                 download.Update();
+
+                if (video.downloadState == DownloadState.Cancelled)
+                {
+                    (sender as Process).Kill();
+                }
             };
 
-            ydl.Exited += (sender, e) => {
-                
+            ydl.Exited += (sender, e) =>
+            {
                 StopCoroutine(Countdown(download));
 
                 if (video.downloadState == DownloadState.Cancelled)
                 {
-                    Plugin.logger.Debug("Cancelled");
+                    Plugin.logger.Info("Cancelled");
                     VideoLoader.Instance.DeleteVideo(video);
                 }
                 else
@@ -247,15 +435,17 @@ namespace MusicVideoPlayer.YT
                 if (videoQueue.Count > 0)
                 {
                     // Start next download
-                    Plugin.logger.Debug("Starting Next Download");
-                    DownloadVideo();                    
+//                    Plugin.logger.Debug("Starting Next Download");
+                    DownloadVideo();
                 }
                 else
                 {
                     // queue empty
                     downloading = false;
                 }
+
                 ydl.Dispose();
+                DecrementDownloadCount();
             };
         }
 
@@ -265,7 +455,7 @@ namespace MusicVideoPlayer.YT
             ydl.Close(); // or .Kill()
             ydl.Dispose();
         }
-        
+
         private IEnumerator VerifyDownload(VideoData video)
         {
             yield return new WaitForSecondsRealtime(1);
@@ -284,6 +474,7 @@ namespace MusicVideoPlayer.YT
                 download.timeSinceLastUpdate += Time.deltaTime;
                 yield return null;
             }
+
             Timeout();
         }
 
@@ -299,14 +490,19 @@ namespace MusicVideoPlayer.YT
 
         private void UpdateYDL()
         {
-            ydl = new Process();
-            ydl.StartInfo.FileName = Environment.CurrentDirectory + "/Youtube-dl/youtube-dl.exe";
-            ydl.StartInfo.Arguments = "-U";
-            ydl.StartInfo.RedirectStandardOutput = true;
-            ydl.StartInfo.RedirectStandardError = true;
-            ydl.StartInfo.UseShellExecute = false;
-            ydl.StartInfo.CreateNoWindow = true;
-            ydl.EnableRaisingEvents = true;
+            ydl = new Process
+            {
+                StartInfo =
+                {
+                    FileName = Environment.CurrentDirectory + "/Youtube-dl/youtube-dl.exe",
+                    Arguments = "-U",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                },
+                EnableRaisingEvents = true
+            };
 
             ydl.Start();
 
@@ -334,6 +530,5 @@ namespace MusicVideoPlayer.YT
                 ydl.Dispose();
             };
         }
-
     }
 }

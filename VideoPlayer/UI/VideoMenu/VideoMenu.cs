@@ -56,8 +56,8 @@ namespace MusicVideoPlayer
         [UIComponent("delete-button")]
         private TextMeshProUGUI deleteButtonText;
 
-        [UIComponent("add-button")]
-        private TextMeshProUGUI addButtonText;
+        //[UIComponent("add-button")]
+        //private TextMeshProUGUI addButtonText;
 
         [UIComponent("search-results-loading")]
         private TextMeshProUGUI searchResultsLoadingText;
@@ -117,7 +117,7 @@ namespace MusicVideoPlayer
 
         private VideoData selectedVideo;
 
-        private SongPreviewPlayer songPreviewPlayer;
+        public static SongPreviewPlayer songPreviewPlayer;
 
         private VideoMenuStatus statusViewer;
 
@@ -169,7 +169,7 @@ namespace MusicVideoPlayer
             if(videoData == null && selectedLevel != null && checkForVideo)
             {
                 var videoDatas = VideoLoader.Instance.GetVideos(selectedLevel);
-                videoData = videoDatas == null ? null : videoDatas.GetActiveVideo();
+                videoData = videoDatas?.GetActiveVideo();
             }
 
             selectedVideo = videoData;
@@ -240,7 +240,7 @@ namespace MusicVideoPlayer
             if (selectedVideo == null || selectedVideo.downloadState != DownloadState.Downloaded)
             {
                 enable = false;
-                //TODO: add option to download video from video.json code here, may cause lag at loading if downloading too many
+                //TODO: add option to download video from video.json at game boot code here, may cause lag at loading if downloading too many
             }
 
             previewButton.interactable = enable;
@@ -371,7 +371,7 @@ namespace MusicVideoPlayer
             {
                 deleteButtonText.SetText("Cancel");
             }
-            else if (selectedVideo.downloadState == DownloadState.NotDownloaded)
+            else if (selectedVideo.downloadState == DownloadState.NotDownloaded || selectedVideo.downloadState == DownloadState.Cancelled)
             {
                 deleteButtonText.SetText("Re-Download");
             }
@@ -547,10 +547,11 @@ namespace MusicVideoPlayer
                 {
                     YouTubeDownloader.Instance.DequeueVideo(selectedVideo);
                 }
-                else if(selectedVideo.downloadState == DownloadState.NotDownloaded) // Download from video.json if only video not there
+                else if(selectedVideo.downloadState == DownloadState.NotDownloaded || selectedVideo.downloadState == DownloadState.Cancelled) // Download from video.json if only video not there
                 {
                     Plugin.logger.Debug("Re-Downloading");
-                    YouTubeDownloader.Instance.EnqueueVideo(selectedVideo);
+                    //YouTubeDownloader.Instance.EnqueueVideo(selectedVideo);
+                    YouTubeDownloader.Instance.StartDownload(selectedVideo);
                     //VideoLoader.Instance.AddVideo(selectedVideo);
                 }
                 else
@@ -603,9 +604,13 @@ namespace MusicVideoPlayer
         [UIAction("on-search-action")]
         private void OnSearchAction()
         {
+            Plugin.logger.Debug("Searching");
             ChangeView(true);
+            Plugin.logger.Debug("Changed View");
             searchKeyboard.SetText(selectedLevel.songName + " - " + selectedLevel.songAuthorName);
+            Plugin.logger.Debug("Set Text");
             parserParams.EmitEvent("show-keyboard");
+            Plugin.logger.Debug("Done Setting Up Search");
         }
 
         [UIAction("on-back-action")]
@@ -633,11 +638,15 @@ namespace MusicVideoPlayer
         [UIAction("on-download-action")]
         private void OnDownloadAction()
         {
-            if(selectedCell >= 0)
+            Plugin.logger.Debug("Download Pressed");
+            if (selectedCell >= 0)
             {
                 VideoData data = new VideoData(YouTubeSearcher.searchResults[selectedCell], selectedLevel);
-                YouTubeDownloader.Instance.EnqueueVideo(data);
+                //Queueing doesn't really work So let's just download them all simultaneously does it really matter?
+                //YouTubeDownloader.Instance.EnqueueVideo(data);
+                YouTubeDownloader.Instance.StartDownload(data);
                 VideoLoader.Instance.AddVideo(data);
+                LoadVideoSettings(data);
             }
         }
 
@@ -667,7 +676,10 @@ namespace MusicVideoPlayer
         #region Youtube Downloader
         private void VideoDownloaderDownloadProgress(VideoData video)
         {
-            if (selectedLevel == video.level)
+            VideoDatas videoDatas = VideoLoader.Instance.GetVideos(video.level);
+            //check if on the same level AND not on a different video config AND not a blank video config (dumbly)
+            //Check for blankness first because otherwise videoDatas can be null
+            if (selectedLevel == video.level && videoTitleText.text != "No Video" && videoDatas.videos.IndexOf(video) == videoDatas.activeVideo)
             {
                 ChangeView(false);
                 LoadVideoSettings(video);
@@ -679,6 +691,7 @@ namespace MusicVideoPlayer
         #region BS Events
         public void HandleDidSelectLevel(LevelCollectionViewController sender, IPreviewBeatmapLevel level)
         {
+            ScreenManager.Instance.PauseVideo();
             selectedLevel = level;
             selectedVideo = null;
             ChangeView(false);

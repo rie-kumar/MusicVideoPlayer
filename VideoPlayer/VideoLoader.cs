@@ -64,6 +64,7 @@ namespace MusicVideoPlayer.Util
             if (levelsVideos.TryGetValue(level, out vids)) return vids.GetActiveVideo();
             return null;
         }
+
         public VideoDatas GetVideos(IPreviewBeatmapLevel level)
         {
             VideoDatas vids;
@@ -87,6 +88,7 @@ namespace MusicVideoPlayer.Util
                 {
                     videoFileName = videoFileName.Replace(c, '-');
                 }
+
                 videoFileName = videoFileName.Replace('\\', '-');
                 videoFileName = videoFileName.Replace('/', '-');
 
@@ -103,6 +105,7 @@ namespace MusicVideoPlayer.Util
         {
             AddVideo(video, video.level);
         }
+
         public void AddVideo(VideoData video, IPreviewBeatmapLevel level)
         {
             VideoDatas thisLevelsVideos;
@@ -110,7 +113,7 @@ namespace MusicVideoPlayer.Util
             {
                 thisLevelsVideos = new VideoDatas
                 {
-                    videos = new List<VideoData> { video },
+                    videos = new List<VideoData> {video},
                     level = video.level
                 };
                 levelsVideos.Add(level, thisLevelsVideos);
@@ -121,10 +124,12 @@ namespace MusicVideoPlayer.Util
                 thisLevelsVideos.activeVideo = thisLevelsVideos.Count - 1;
             }
         }
+
         public void AddLevelsVideos(VideoDatas videos)
         {
             AddLevelsVideos(videos, videos.level);
         }
+
         public void AddLevelsVideos(VideoDatas videos, IPreviewBeatmapLevel level)
         {
             levelsVideos.Add(level, videos);
@@ -144,11 +149,14 @@ namespace MusicVideoPlayer.Util
                         levelsVideos.Remove(video.level);
                         return true;
                     }
+
                     return false;
                 }
             }
+
             return false;
         }
+
         public void RemoveVideos(VideoDatas videos)
         {
             //TODO: make sure this is right
@@ -170,18 +178,21 @@ namespace MusicVideoPlayer.Util
             //    streamWriter.Write(JsonConvert.SerializeObject(video));
             //}
         }
+
         public static void SaveVideosToDisk(VideoDatas videos)
         {
             if (videos == null || videos.Count == 0) return;
             for (int i = videos.Count - 1; i >= 0; --i)
             {
-                if(videos.videos[i] == null)
+                if (videos.videos[i] == null)
                 {
                     videos.videos.RemoveAt(i);
                 }
             }
+
             if (!Directory.Exists(GetLevelPath(videos.level))) Directory.CreateDirectory(GetLevelPath(videos.level));
-            File.WriteAllText(Path.Combine(GetLevelPath(videos.level), "video.json"), JsonConvert.SerializeObject(videos));
+            File.WriteAllText(Path.Combine(GetLevelPath(videos.level), "video.json"),
+                JsonConvert.SerializeObject(videos));
 
             //using (StreamWriter streamWriter = File.CreateText(Path.Combine(GetLevelPath(video.level), "video.json")))
             //{
@@ -198,13 +209,13 @@ namespace MusicVideoPlayer.Util
 
         private void RetrieveOSTVideoData()
         {
-            BeatmapLevelSO[] levels = Resources.FindObjectsOfTypeAll<BeatmapLevelSO>().Where(x => x.GetType() != typeof(CustomBeatmapLevel)).ToArray();
+            BeatmapLevelSO[] levels = Resources.FindObjectsOfTypeAll<BeatmapLevelSO>()
+                .Where(x => x.GetType() != typeof(CustomBeatmapLevel)).ToArray();
 
             Action job = delegate
             {
                 try
                 {
-
                     float i = 0;
                     foreach (var level in levels)
                     {
@@ -215,6 +226,7 @@ namespace MusicVideoPlayer.Util
                         {
                             videoFileName = videoFileName.Replace(c, '-');
                         }
+
                         videoFileName = videoFileName.Replace('\\', '-');
                         videoFileName = videoFileName.Replace('/', '-');
 
@@ -238,17 +250,20 @@ namespace MusicVideoPlayer.Util
                                 if (_loadingCancelled) return;
                                 try
                                 {
-                                    videos = LoadVideos(result, level.difficultyBeatmapSets[0].difficultyBeatmaps[0].level);
+                                    videos = LoadVideos(result,
+                                        level.difficultyBeatmapSets[0].difficultyBeatmaps[0].level);
                                 }
                                 catch
                                 {
-                                    VideoData video = LoadVideo(result, level.difficultyBeatmapSets[0].difficultyBeatmaps[0].level);
+                                    VideoData video = LoadVideo(result,
+                                        level.difficultyBeatmapSets[0].difficultyBeatmaps[0].level);
                                     videos = new VideoDatas
                                     {
-                                        videos = new List<VideoData> { video },
+                                        videos = new List<VideoData> {video},
                                         level = video.level
                                     };
                                 }
+
                                 if (videos != null && videos.videos.Count != 0)
                                 {
                                     AddLevelsVideos(videos);
@@ -261,7 +276,6 @@ namespace MusicVideoPlayer.Util
                             Plugin.logger.Error(e.ToString());
                         }
                     }
-
                 }
                 catch (Exception e)
                 {
@@ -272,7 +286,6 @@ namespace MusicVideoPlayer.Util
 
             Action finish = delegate
             {
-
                 AreVideosLoaded = true;
                 AreVideosLoading = false;
 
@@ -315,18 +328,17 @@ namespace MusicVideoPlayer.Util
                                 {
                                     videos = LoadVideos(result, level.Value);
                                     videos.level = level.Value;
-                                    foreach(VideoData vid in videos.videos)
+                                    foreach (VideoData vid in videos.videos)
                                     {
                                         vid.level = level.Value;
                                     }
-
                                 }
                                 catch
                                 {
                                     VideoData video = LoadVideo(result, level.Value);
                                     videos = new VideoDatas
                                     {
-                                        videos = new List<VideoData> { LoadVideo(result, level.Value) },
+                                        videos = new List<VideoData> {LoadVideo(result, level.Value)},
                                         level = level.Value
                                     };
                                 }
@@ -335,7 +347,6 @@ namespace MusicVideoPlayer.Util
                                 {
                                     AddLevelsVideos(videos);
                                 }
-
                             });
                         }
                         catch (Exception e)
@@ -344,7 +355,6 @@ namespace MusicVideoPlayer.Util
                             Plugin.logger.Error(e.ToString());
                         }
                     }
-
                 }
                 catch (Exception e)
                 {
@@ -369,19 +379,47 @@ namespace MusicVideoPlayer.Util
 
         //Delete Video from set of videos for level
         //Return true if no videos left, false if other videos exist
-        public bool DeleteVideo(VideoData video)
+        public bool DeleteVideo(VideoData video, bool alsoRemoveConfig = true)
         {
-            File.Delete(GetVideoPath(video));
-            if (RemoveVideo(video))
+            string levelPath = GetLevelPath(video.level);
+            var dir = new DirectoryInfo(levelPath);
+            foreach (var file in dir.EnumerateFiles(video.videoPath.Substring(0, video.videoPath.Length - 4) + "*"))
             {
-                File.Delete(Path.Combine(GetLevelPath(video.level), "video.json"));
-                levelsVideos.Remove(video.level);
+                Plugin.logger.Debug($"Deleting {file.Name}");
+                try
+                {
+                    file.Delete();
+                }
+                catch (System.IO.IOException e)
+                {
+                    //Re-Delete
+                    Plugin.logger.Error(e);
+                }
+                catch (Exception e)
+                {
+                    Plugin.logger.Error(e);
+                }
+            }
+
+            //File.Delete(GetVideoPath(video));
+            if (alsoRemoveConfig)
+            {
+                if (RemoveVideo(video))
+                {
+                    File.Delete(Path.Combine(levelPath, "video.json"));
+                    levelsVideos.Remove(video.level);
+                    return true;
+                }
+                else
+                {
+                    VideoDatas thisLevelsVideos = GetVideos(video.level);
+                    SaveVideosToDisk(thisLevelsVideos);
+                    return false;
+                }
+            }
+            else
+            {
                 return true;
-            } else
-            {
-                VideoDatas thisLevelsVideos = GetVideos(video.level);
-                SaveVideosToDisk(thisLevelsVideos);
-                return false;
             }
         }
 
@@ -408,6 +446,7 @@ namespace MusicVideoPlayer.Util
 
             return vid;
         }
+
         private VideoDatas LoadVideos(string jsonPath, IPreviewBeatmapLevel level)
         {
             var infoText = File.ReadAllText(jsonPath);
@@ -417,11 +456,12 @@ namespace MusicVideoPlayer.Util
                 try
                 {
                     vids = JsonConvert.DeserializeObject<VideoDatas>(infoText);
-                } catch
+                }
+                catch
                 {
                     VideoData vid = JsonConvert.DeserializeObject<VideoData>(infoText);
                     vid.level = level;
-                    vids = new VideoDatas { videos = new List<VideoData> { vid }, level = level };
+                    vids = new VideoDatas {videos = new List<VideoData> {vid}, level = level};
                 }
             }
             catch (Exception e)
@@ -431,6 +471,7 @@ namespace MusicVideoPlayer.Util
                 Plugin.logger.Error(e.StackTrace);
                 return null;
             }
+
             foreach (VideoData vid in vids.videos)
             {
                 vid.level = level;
@@ -440,6 +481,7 @@ namespace MusicVideoPlayer.Util
                     vid.downloadState = DownloadState.Downloaded;
                 }
             }
+
             return vids;
         }
     }
