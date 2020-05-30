@@ -30,7 +30,7 @@
     </vertical>
     <bottom-button-panel pad-top='3'>
       <button id='delete-button' text='Delete' on-click='on-delete-action'/>
-      <button id='add-button' text='Add Extra' on-click='on-add-action' interactable='false'/>
+      <button id='add-button' text='Add New Config' on-click='on-add-action' interactable='false'/>
       <button id='preview-button' text='Preview' on-click='on-preview-action'/>
       <button id='search-button' text='Search' on-click='on-search-action'/>
     </bottom-button-panel>
