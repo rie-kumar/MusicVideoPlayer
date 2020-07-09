@@ -12,13 +12,17 @@ using MusicVideoPlayer.YT;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using Debug = UnityEngine.Debug;
 using Image = UnityEngine.UI.Image;
 
 namespace MusicVideoPlayer
@@ -26,35 +30,31 @@ namespace MusicVideoPlayer
     public class VideoMenu : PersistentSingleton<VideoMenu>
     {
         #region Fields
-        [UIObject("root-object")]
-        private GameObject root;
+
+        [UIObject("root-object")] private GameObject root;
 
         #region Rect Transform
-        [UIComponent("video-details")]
-        private RectTransform videoDetailsViewRect;
 
-        [UIComponent("video-search-results")]
-        private RectTransform videoSearchResultsViewRect;
+        [UIComponent("video-details")] private RectTransform videoDetailsViewRect;
+
+        [UIComponent("video-search-results")] private RectTransform videoSearchResultsViewRect;
+
         #endregion
 
         #region Text Mesh Pro
-        [UIComponent("video-title")]
-        private TextMeshProUGUI videoTitleText;
 
-        [UIComponent("current-video-title")]
-        private TextMeshProUGUI currentVideoTitleText;
+        [UIComponent("video-title")] private TextMeshProUGUI videoTitleText;
+
+        [UIComponent("current-video-title")] private TextMeshProUGUI currentVideoTitleText;
 
         [UIComponent("current-video-description")]
         private TextMeshProUGUI currentVideoDescriptionText;
 
-        [UIComponent("current-video-offset")]
-        private TextMeshProUGUI currentVideoOffsetText;
+        [UIComponent("current-video-offset")] private TextMeshProUGUI currentVideoOffsetText;
 
-        [UIComponent("preview-button")]
-        private TextMeshProUGUI previewButtonText;
+        [UIComponent("preview-button")] private TextMeshProUGUI previewButtonText;
 
-        [UIComponent("delete-button")]
-        private TextMeshProUGUI deleteButtonText;
+        [UIComponent("delete-button")] private TextMeshProUGUI deleteButtonText;
 
         //[UIComponent("add-button")]
         //private TextMeshProUGUI addButtonText;
@@ -62,19 +62,18 @@ namespace MusicVideoPlayer
         [UIComponent("search-results-loading")]
         private TextMeshProUGUI searchResultsLoadingText;
 
-        [UIComponent("looping-button")]
-        private TextMeshProUGUI loopingButtonText;
+        [UIComponent("looping-button")] private TextMeshProUGUI loopingButtonText;
 
-        [UIComponent("download-state-text")]
-        private TextMeshProUGUI downloadStateText;
+        [UIComponent("download-state-text")] private TextMeshProUGUI downloadStateText;
 
         [UIComponent("offset-magnitude-button")]
         private TextMeshProUGUI offsetMagnitudeButtonText;
+
         #endregion
 
         #region Buttons
-        [UIComponent("video-list")]
-        private CustomListTableData customListTableData;
+
+        [UIComponent("video-list")] private CustomListTableData customListTableData;
 
         [UIComponent("offset-decrease-button")]
         private Button offsetDecreaseButton;
@@ -82,34 +81,29 @@ namespace MusicVideoPlayer
         [UIComponent("offset-increase-button")]
         private Button offsetIncreaseButton;
 
-        [UIComponent("delete-button")]
-        private Button deleteButton;
+        [UIComponent("delete-button")] private Button deleteButton;
 
-        [UIComponent("add-button")]
-        private Button addButton;
+        [UIComponent("add-button")] private Button addButton;
 
-        [UIComponent("download-button")]
-        private Button downloadButton;
+        [UIComponent("guess-offset")] private Button guessButton;
 
-        [UIComponent("refine-button")]
-        private Button refineButton;
+        [UIComponent("download-button")] private Button downloadButton;
 
-        [UIComponent("preview-button")]
-        private Button previewButton;
+        [UIComponent("refine-button")] private Button refineButton;
 
-        [UIComponent("looping-button")]
-        private Button loopingButton;
+        [UIComponent("preview-button")] private Button previewButton;
 
-        [UIComponent("search-button")]
-        private Button searchButton;
+        [UIComponent("looping-button")] private Button loopingButton;
+
+        [UIComponent("search-button")] private Button searchButton;
+
         #endregion
 
-        [UIComponent("search-keyboard")]
-        private ModalKeyboard searchKeyboard;
+        [UIComponent("search-keyboard")] private ModalKeyboard searchKeyboard;
 
         #region Params
-        [UIParams]
-        private BSMLParserParams parserParams;
+
+        [UIParams] private BSMLParserParams parserParams;
 
         private Vector3 videoPlayerDetailScale = new Vector3(0.57f, 0.57f, 1f);
 
@@ -132,7 +126,9 @@ namespace MusicVideoPlayer
         private IEnumerator updateSearchResultsCoroutine = null;
 
         private int selectedCell;
+
         #endregion
+
         #endregion
 
         public void OnLoad()
@@ -154,19 +150,22 @@ namespace MusicVideoPlayer
             statusViewer.DidEnable += StatusViewerDidEnable;
             statusViewer.DidDisable += StatusViewerDidDisable;
 
-            Resources.FindObjectsOfTypeAll<MissionSelectionMapViewController>().FirstOrDefault().didActivateEvent += MissionSelectionDidActivate;
+            Resources.FindObjectsOfTypeAll<MissionSelectionMapViewController>().FirstOrDefault().didActivateEvent +=
+                MissionSelectionDidActivate;
         }
 
         #region Public Methods
+
         public void LoadVideoSettings(VideoData videoData)
         {
             LoadVideoSettings(videoData, true);
         }
+
         public void LoadVideoSettings(VideoData videoData, bool checkForVideo)
         {
             StopPreview(false);
 
-            if(videoData == null && selectedLevel != null && checkForVideo)
+            if (videoData == null && selectedLevel != null && checkForVideo)
             {
                 var videoDatas = VideoLoader.Instance.GetVideos(selectedLevel);
                 videoData = videoDatas?.GetActiveVideo();
@@ -177,7 +176,8 @@ namespace MusicVideoPlayer
             if (videoData != null)
             {
                 videoTitleText.text = selectedVideo.title;
-                currentVideoTitleText.text = $"[{selectedVideo.duration}] {selectedVideo.title} by {selectedVideo.author}";
+                currentVideoTitleText.text =
+                    $"[{selectedVideo.duration}] {selectedVideo.title} by {selectedVideo.author}";
                 currentVideoDescriptionText.text = selectedVideo.description;
                 currentVideoOffsetText.text = selectedVideo.offset.ToString();
                 EnableButtons(true);
@@ -226,9 +226,11 @@ namespace MusicVideoPlayer
 
             ScreenManager.Instance.SetPlacement(MVPSettings.instance.PlacementMode);
         }
+
         #endregion
 
         #region Private Methods
+
         private void EnableButtons(bool enable)
         {
             offsetDecreaseButton.interactable = enable;
@@ -245,7 +247,7 @@ namespace MusicVideoPlayer
 
             previewButton.interactable = enable;
 
-            if(selectedLevel == null)
+            if (selectedLevel == null)
             {
                 searchButton.interactable = false;
             }
@@ -272,7 +274,7 @@ namespace MusicVideoPlayer
             isPreviewing = false;
             ScreenManager.Instance.PrepareVideo(selectedVideo);
 
-            if(stopPreviewMusic)
+            if (stopPreviewMusic)
             {
                 songPreviewPlayer.FadeOut();
             }
@@ -291,7 +293,7 @@ namespace MusicVideoPlayer
             {
                 parserParams.EmitEvent("hide-keyboard");
 
-                if(isActive)
+                if (isActive)
                 {
                     ScreenManager.Instance.SetScale(videoPlayerDetailScale);
                     ScreenManager.Instance.SetPosition(videoPlayerDetailPosition);
@@ -345,6 +347,7 @@ namespace MusicVideoPlayer
             {
                 StopPreview(true);
             }
+
             if (selectedVideo != null)
             {
                 int magnitude = isOffsetInSeconds ? 1000 : 100;
@@ -365,19 +368,23 @@ namespace MusicVideoPlayer
             }
         }
 
-        private void UpdateDeleteButton()
+        private void UpdateVideoDependentButtons()
         {
-            if(selectedVideo.downloadState == DownloadState.Downloading)
+            if (selectedVideo.downloadState == DownloadState.Downloading)
             {
                 deleteButtonText.SetText("Cancel");
+                guessButton.enabled = false;
             }
-            else if (selectedVideo.downloadState == DownloadState.NotDownloaded || selectedVideo.downloadState == DownloadState.Cancelled)
+            else if (selectedVideo.downloadState == DownloadState.NotDownloaded ||
+                     selectedVideo.downloadState == DownloadState.Cancelled)
             {
                 deleteButtonText.SetText("Re-Download");
+                guessButton.enabled = false;
             }
             else
             {
                 deleteButtonText.SetText("Delete");
+                guessButton.enabled = true;
             }
         }
 
@@ -406,7 +413,7 @@ namespace MusicVideoPlayer
                         break;
                 }
 
-                UpdateDeleteButton();
+                UpdateVideoDependentButtons();
             }
 
             downloadStateText.text = "Download Progress: " + state;
@@ -426,7 +433,7 @@ namespace MusicVideoPlayer
                 if (request.isNetworkError || request.isHttpError)
                     Debug.Log(request.error);
                 else
-                    item.icon = ((DownloadHandlerTexture)request.downloadHandler).texture;
+                    item.icon = ((DownloadHandlerTexture) request.downloadHandler).texture;
 
                 videos.Add(item);
             }
@@ -464,30 +471,34 @@ namespace MusicVideoPlayer
                 yield return new WaitForSeconds(0.5f);
             }
         }
+
         #endregion
 
         #region Actions
+
         [UIAction("prev-video-action")]
         private void PrevVideoAction()
         {
             VideoDatas videoDatas = VideoLoader.Instance.GetVideos(selectedLevel);
-            if(videoDatas.activeVideo == 0)
+            if (videoDatas.activeVideo == 0)
             {
                 videoDatas.activeVideo = videoDatas.Count - 1;
-            } else
+            }
+            else
             {
                 --videoDatas.activeVideo;
             }
-            
+
             ChangeView(false);
             LoadVideoSettings(videoDatas.GetActiveVideo());
             Save();
         }
+
         [UIAction("next-video-action")]
         private void NextVideoAction()
         {
             VideoDatas videoDatas = VideoLoader.Instance.GetVideos(selectedLevel);
-            if (videoDatas.activeVideo == videoDatas.Count-1)
+            if (videoDatas.activeVideo == videoDatas.Count - 1)
             {
                 videoDatas.activeVideo = 0;
             }
@@ -509,12 +520,199 @@ namespace MusicVideoPlayer
             Save();
         }
 
+
+        private string offsetGuess;
+
+        [UIAction("on-guess-offset-action")]
+        private void OnGuessOffsetActionWrapper()
+        {
+            StartCoroutine(OnGuessOffsetAction());
+        }
+        private IEnumerator OnGuessOffsetAction()
+        {
+            if (selectedVideo == null) yield break;
+            downloadStateText.text = "Converting Song";
+            Plugin.logger.Info("Converting Song");
+            string levelFolder = VideoLoader.GetLevelPath(selectedLevel);
+            var videoAbsolutePath = Path.Combine(levelFolder, selectedVideo.videoPath);
+            var songAbsolutePath = Path.Combine(levelFolder,
+                ((CustomPreviewBeatmapLevel) selectedLevel).standardLevelInfoSaveData.songFilename);
+            var splitSongPath = songAbsolutePath.Split('.');
+            string mp3SongPath = "";
+            for (int i = 0; i <= splitSongPath.Length - 2; i++)
+            {
+                mp3SongPath += splitSongPath[i] + ".";
+            }
+
+            mp3SongPath += "mp3";
+            // Plugin.logger.Debug(Environment.CurrentDirectory + "\\Youtube-dl\\ffmpeg.exe" + $"-i {songAbsolutePath} {mp3SongPath}");
+            // Plugin.logger.Debug(Environment.CurrentDirectory + "\\Youtube-dl\\SyncVideoWithAudio\\SyncVideoWithAudio.exe" + $"offest {songAbsolutePath} {videoAbsolutePath}");
+            // Process ffmpegProcess = new Process
+            // {
+            //     StartInfo =
+            //     {
+            //         FileName = Environment.CurrentDirectory + "\\Youtube-dl\\ffmpeg.exe",
+            //         Arguments = $"-i \"{songAbsolutePath}\" \"{mp3SongPath}\" -y",
+            //         RedirectStandardOutput = true,
+            //         RedirectStandardError = true,
+            //         UseShellExecute = false,
+            //         CreateNoWindow = true
+            //     }
+            // };
+            // Plugin.logger.Info("Made Process");
+            // Plugin.logger.Debug($"{ffmpegProcess.StartInfo.FileName} {ffmpegProcess.StartInfo.Arguments} inside folder {ffmpegProcess.StartInfo.WorkingDirectory}");
+            // try
+            // {
+            //     ffmpegProcess.OutputDataReceived += (sender, e) =>
+            //     {
+            //         Plugin.logger.Debug(e.Data);
+            //         offsetGuess = e.Data;
+            //     };
+            //     ffmpegProcess.ErrorDataReceived += (sender, e) =>
+            //     {
+            //         Plugin.logger.Error(e.Data);
+            //         offsetGuess = e.Data;
+            //     };
+            //     ffmpegProcess.Exited += (send, eventArgs) =>
+            //     {
+            //         if (File.Exists(mp3SongPath) && new FileInfo(mp3SongPath).Length > 0)
+            //         {
+            //             Plugin.logger.Info("Converted song from egg to mp3 -> Can Make Comparison");
+            //         }
+            //         else
+            //         {
+            //             Plugin.logger.Error(
+            //                 $"Cannot Convert song from egg to mp3 -> Cannot Make Comparison | Check errors by runnning {Environment.CurrentDirectory + "\\Youtube-dl\\ffmpeg.exe"} -i {songAbsolutePath} {mp3SongPath}");
+            //         }
+            //         Plugin.logger.Info("FFMpeg done");
+            //     };
+            //     ffmpegProcess.Start();
+            //     Plugin.logger.Info("FFMpeg Started");
+            // }
+            // catch (Exception e)
+            // {
+            //     Plugin.logger.Error(
+            //         $"Cannot Convert song from egg to mp3 -> Cannot Make Comparison | Check that FFmpeg is installed at {Environment.CurrentDirectory + "\\Youtube-dl\\ffmpeg.exe"}");
+            //     Plugin.logger.Error(e);
+            // }
+            //
+            // ffmpegProcess.PriorityBoostEnabled = true;
+            // Plugin.logger.Debug(ffmpegProcess.HasExited.ToString());
+            // yield return new WaitUntil(() => ffmpegProcess.HasExited);
+            downloadStateText.text = "Guessing Offset";
+            Plugin.logger.Info("Guessing Offset");
+            var offsetProcess = new Process
+            {
+                StartInfo =
+                        {
+                            FileName = Environment.CurrentDirectory +
+                                       "\\Youtube-dl\\SyncVideoWithAudio\\SyncVideoWithAudio.exe",
+                            Arguments = $"offset \"{songAbsolutePath}\" \"{videoAbsolutePath}\"",
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        },
+                EnableRaisingEvents = true
+            };
+            Plugin.logger.Info("Made Guess Process");
+            Plugin.logger.Debug($"{offsetProcess.StartInfo.FileName} {offsetProcess.StartInfo.Arguments} inside folder {offsetProcess.StartInfo.WorkingDirectory}");
+            try
+            {
+                // offsetProcess.OutputDataReceived += (sender, e) =>
+                // {
+                //     Plugin.logger.Info(e.Data);
+                //     offsetGuess = e.Data;
+                // };
+                // Plugin.logger.Info("Output");
+                offsetProcess.ErrorDataReceived += (sender, e) =>
+                {
+                    Plugin.logger.Error(e.Data);
+                    offsetGuess = e.Data;
+                };
+                Plugin.logger.Info("Error");
+                offsetProcess.Exited += (sender, e) =>
+                {
+                    Plugin.logger.Info("Guess Offset done!");
+                    Plugin.logger.Info($"GO->{offsetGuess}->BS");
+                    String outputLine;
+                    // while (!offsetProcess.StandardOutput.EndOfStream)
+                    // {
+                    //     var readTask = offsetProcess.StandardOutput.ReadLineAsync();
+                    //     readTask.Wait();
+                    //     outputLine = readTask.Result;
+                    //     Plugin.logger.Info(outputLine);
+                    //     offsetGuess = outputLine;
+                    // }
+                    Plugin.logger.Info("Done Read");
+                    // var restOfOutputTask = offsetProcess.StandardOutput.ReadToEndAsync();
+                    var restOfOutput = offsetProcess.StandardOutput.ReadToEnd();
+                    Plugin.logger.Info("Wait");
+                    var lineOutput = restOfOutput.Split('\n');
+                    foreach (var line in lineOutput)
+                    {
+                        var trimmedLine = line.Trim();
+                        Plugin.logger.Info(trimmedLine);
+                        offsetGuess = trimmedLine;
+                    }
+                    // Plugin.logger.Info("Done Wait");
+                    // Plugin.logger.Info(restOfOutputTask.Result);
+                    Plugin.logger.Info("Disposing");
+                    offsetProcess?.Dispose();
+                    StartCoroutine(GuessOffsetSucceeded());
+                };
+                Plugin.logger.Info("Guess Starting");
+                offsetProcess.Start();
+                // offsetProcess.BeginOutputReadLine();
+                offsetProcess.BeginErrorReadLine();
+                Plugin.logger.Info("Guess Started");
+            }
+            catch (Exception e)
+            {
+                GuessOffsetFailed();
+                Plugin.logger.Error(
+                    @"Cannot Convert song from egg to mp3 -> Cannot Make Comparison | I Don't know What happened");
+                Plugin.logger.Error(e);
+                yield break;
+            }
+            // offsetProcess.PriorityBoostEnabled = true;
+            Plugin.logger.Debug(offsetProcess.HasExited.ToString());
+            yield return new WaitUntil(() => offsetProcess.HasExited);
+            Plugin.logger.Info("Guess Offset done?");
+        }
+
+        private void GuessOffsetFailed()
+        {
+            downloadStateText.text = "Offset Guess Failed";
+        }
+
+        private IEnumerator GuessOffsetSucceeded()
+        {
+            yield return new WaitForSeconds(1);
+            Plugin.logger.Info($"GOS->{offsetGuess}->Bs");
+            Plugin.logger.Info("Finished Guess");
+            try
+            {
+                selectedVideo.offset = -((int) double.Parse(offsetGuess.Trim()));
+                Plugin.logger.Info(selectedVideo.offset.ToString());
+                currentVideoOffsetText.text = selectedVideo.offset.ToString();
+                Save();
+            }
+            catch (Exception e)
+            {
+                Plugin.logger.Error(e);
+                GuessOffsetFailed();
+            }
+
+            downloadStateText.text = "Guessed Successful";
+        }
+
         [UIAction("on-offset-magnitude-action")]
         private void OnOffsetMagnitudeAction()
         {
             isOffsetInSeconds = !isOffsetInSeconds;
 
-            if(isOffsetInSeconds)
+            if (isOffsetInSeconds)
             {
                 offsetMagnitudeButtonText.text = "+1000";
             }
@@ -539,15 +737,17 @@ namespace MusicVideoPlayer
         [UIAction("on-delete-action")]
         private void OnDeleteAction()
         {
-            if(selectedVideo != null)
+            if (selectedVideo != null)
             {
                 bool loadNull = true;
                 Plugin.logger.Debug(selectedVideo.downloadState.ToString());
-                if(selectedVideo.downloadState == DownloadState.Downloading)
+                if (selectedVideo.downloadState == DownloadState.Downloading)
                 {
                     YouTubeDownloader.Instance.DequeueVideo(selectedVideo);
                 }
-                else if(selectedVideo.downloadState == DownloadState.NotDownloaded || selectedVideo.downloadState == DownloadState.Cancelled) // Download from video.json if only video not there
+                else if (selectedVideo.downloadState == DownloadState.NotDownloaded ||
+                         selectedVideo.downloadState == DownloadState.Cancelled
+                ) // Download from video.json if only video not there
                 {
                     Plugin.logger.Debug("Re-Downloading");
                     //YouTubeDownloader.Instance.EnqueueVideo(selectedVideo);
@@ -558,6 +758,7 @@ namespace MusicVideoPlayer
                 {
                     loadNull = VideoLoader.Instance.DeleteVideo(selectedVideo);
                 }
+
                 if (loadNull)
                 {
                     LoadVideoSettings(null);
@@ -576,6 +777,7 @@ namespace MusicVideoPlayer
             {
                 StopPreview(true);
             }
+
             if (selectedVideo != null)
             {
                 LoadVideoSettings(null, false);
@@ -595,7 +797,8 @@ namespace MusicVideoPlayer
                 ScreenManager.Instance.PrepareVideo(selectedVideo);
                 ScreenManager.Instance.PlayVideo(true);
                 songPreviewPlayer.volume = 1;
-                songPreviewPlayer.CrossfadeTo(selectedLevel.GetPreviewAudioClipAsync(new CancellationToken()).Result, 0, selectedLevel.songDuration, 1f);
+                songPreviewPlayer.CrossfadeTo(selectedLevel.GetPreviewAudioClipAsync(new CancellationToken()).Result, 0,
+                    selectedLevel.songDuration, 1f);
             }
 
             SetPreviewState();
@@ -622,7 +825,7 @@ namespace MusicVideoPlayer
         [UIAction("on-select-cell")]
         private void OnSelectCell(TableView view, int idx)
         {
-            if(customListTableData.data.Count > idx)
+            if (customListTableData.data.Count > idx)
             {
                 selectedCell = idx;
                 downloadButton.interactable = true;
@@ -674,21 +877,24 @@ namespace MusicVideoPlayer
         #endregion
 
         #region Youtube Downloader
+
         private void VideoDownloaderDownloadProgress(VideoData video)
         {
             VideoDatas videoDatas = VideoLoader.Instance.GetVideos(video.level);
             //check if on the same level AND not on a different video config AND not a blank video config (dumbly)
             //Check for blankness first because otherwise videoDatas can be null
-            if (selectedLevel == video.level && videoTitleText.text != "No Video" && videoDatas.videos.IndexOf(video) == videoDatas.activeVideo)
+            if (selectedLevel == video.level && videoTitleText.text != "No Video" &&
+                videoDatas.videos.IndexOf(video) == videoDatas.activeVideo)
             {
                 ChangeView(false);
                 LoadVideoSettings(video);
             }
         }
-        
+
         #endregion
 
         #region BS Events
+
         public void HandleDidSelectLevel(LevelCollectionViewController sender, IPreviewBeatmapLevel level)
         {
             ScreenManager.Instance.PauseVideo();
@@ -707,6 +913,7 @@ namespace MusicVideoPlayer
         #endregion
 
         #region Events
+
         private void MissionSelectionDidActivate(bool firstActivation, ViewController.ActivationType activationType)
         {
             selectedVideo = null;
@@ -723,9 +930,11 @@ namespace MusicVideoPlayer
         {
             Deactivate();
         }
+
         #endregion
 
         #region Classes
+
         public class VideoMenuStatus : MonoBehaviour
         {
             public event EventHandler DidEnable;
@@ -735,7 +944,7 @@ namespace MusicVideoPlayer
             {
                 var handler = DidEnable;
 
-                if(handler != null)
+                if (handler != null)
                 {
                     handler(this, EventArgs.Empty);
                 }
@@ -751,6 +960,7 @@ namespace MusicVideoPlayer
                 }
             }
         }
+
         #endregion
     }
 }
