@@ -1,0 +1,3 @@
+[submodule "Aurio"]
+	path = Aurio
+	url = https://github.com/protyposis/Aurio.git
