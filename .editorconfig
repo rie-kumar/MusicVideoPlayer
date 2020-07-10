@@ -2,3 +2,6 @@
 
 # CS0649: Field 'VideoMenu.offsetIncreaseButton' is never assigned to, and will always have its default value null
 dotnet_diagnostic.CS0649.severity = none
+
+# Default severity for analyzer diagnostics with category 'Style'
+dotnet_analyzer_diagnostic.category-Style.severity = silent

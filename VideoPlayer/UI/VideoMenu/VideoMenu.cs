@@ -421,7 +421,9 @@ namespace MusicVideoPlayer
 
         private IEnumerator UpdateSearchResults(List<YTResult> results)
         {
+            Plugin.logger.Info("Updating Search Results");
             List<CustomListTableData.CustomCellInfo> videos = new List<CustomListTableData.CustomCellInfo>();
+            Plugin.logger.Info("List Made");
 
             foreach (var result in results)
             {
@@ -467,6 +469,32 @@ namespace MusicVideoPlayer
                 }
 
                 searchResultsLoadingText.SetText(loadingText + periods);
+
+                yield return new WaitForSeconds(0.5f);
+            }
+        }
+        private IEnumerator GuessLoading()
+        {
+            int count = 0;
+            string loadingText = "Guessing Offset";
+            downloadStateText.gameObject.SetActive(true);
+
+            while (downloadStateText.gameObject.activeInHierarchy)
+            {
+                string periods = string.Empty;
+                count++;
+
+                for (int i = 0; i < count; i++)
+                {
+                    periods += ".";
+                }
+
+                if (count == 3)
+                {
+                    count = 0;
+                }
+
+                downloadStateText.SetText(loadingText + periods);
 
                 yield return new WaitForSeconds(0.5f);
             }
@@ -844,6 +872,7 @@ namespace MusicVideoPlayer
             Plugin.logger.Debug("Download Pressed");
             if (selectedCell >= 0)
             {
+                downloadButton.interactable = false;
                 VideoData data = new VideoData(YouTubeSearcher.searchResults[selectedCell], selectedLevel);
                 //Queueing doesn't really work So let's just download them all simultaneously does it really matter?
                 //YouTubeDownloader.Instance.EnqueueVideo(data);
