@@ -3,5 +3,10 @@
   <dropdown-list-setting text='Screen Position' value='screen-position' options='positions'></dropdown-list-setting>
   <dropdown-list-setting text='Download Quality' value='quality' options='modes'></dropdown-list-setting>
   <checkbox text='Play Both Video and BeatMap Audio in Preview' value='play-preview-audio' hover-hint='When checked will play both the audio from the video and the audio from the beatmap, allowing for easier syncing'></checkbox>
-  <horizontal><button text='Re-Download All Videos' on-click='ReDownloadAll' hover-hint='Re-Download All Videos -> CANNOT BE CANCELLED'></button><text text='?' id="howManyVideoDone"></text></horizontal>
+  <horizontal>
+    <button id="DownloadAllButton"  text='Re-Download All Videos' on-click='ReDownloadAll' hover-hint='Re-Download All Videos -> CANNOT BE CANCELLED'></button><text text='' id="howManyVideoDone"></text></horizontal>
+  <horizontal>
+    <button id="DeleteAllButton" text='Free Space by Removing Video Files (Not Config)' on-click='DeleteAll' hover-hint='Delete All Video Files -> CANNOT BE CANCELLED'></button>
+    <text text='' id="howManyDeleted"></text>
+  </horizontal>
 </settings-container>

@@ -1,30 +1,62 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
-VisualStudioVersion = 16.0.29911.84
+VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicVideoPlayer", "VideoPlayer\MusicVideoPlayer.csproj", "{539D165F-CF86-4529-A5C8-25FA04B90886}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A6575B74-70C4-48B0-9108-FFD19923CBDD}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{05DABFC1-0D5F-45E4-8E07-15538F67DA33}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		Aurio\Aurio\Aurio.licenseheader = Aurio\Aurio\Aurio.licenseheader
+		Aurio\Aurio\Directory.Build.props = Aurio\Aurio\Directory.Build.props
+		Aurio\Aurio\GlobalAssemblyInfo.cs = Aurio\Aurio\GlobalAssemblyInfo.cs
 	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{05DABFC1-0D5F-45E4-8E07-15538F67DA33}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		Aurio\Aurio\Aurio.licenseheader = Aurio\Aurio\Aurio.licenseheader
+		Aurio\Aurio\Directory.Build.props = Aurio\Aurio\Directory.Build.props
+		Aurio\Aurio\GlobalAssemblyInfo.cs = Aurio\Aurio\GlobalAssemblyInfo.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{33AD9CF5-1CD7-4393-A5A8-42A64760C229}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{02507825-08DE-4A31-B1C8-531BB8DA6BAC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{C10A7AB5-A4DB-414C-859F-B642CCBC48FF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{539D165F-CF86-4529-A5C8-25FA04B90886}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{539D165F-CF86-4529-A5C8-25FA04B90886}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{539D165F-CF86-4529-A5C8-25FA04B90886}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{539D165F-CF86-4529-A5C8-25FA04B90886}.Debug|x64.Build.0 = Debug|Any CPU
+		{539D165F-CF86-4529-A5C8-25FA04B90886}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{539D165F-CF86-4529-A5C8-25FA04B90886}.Debug|x86.Build.0 = Debug|Any CPU
 		{539D165F-CF86-4529-A5C8-25FA04B90886}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{539D165F-CF86-4529-A5C8-25FA04B90886}.Release|Any CPU.Build.0 = Release|Any CPU
+		{539D165F-CF86-4529-A5C8-25FA04B90886}.Release|x64.ActiveCfg = Release|Any CPU
+		{539D165F-CF86-4529-A5C8-25FA04B90886}.Release|x64.Build.0 = Release|Any CPU
+		{539D165F-CF86-4529-A5C8-25FA04B90886}.Release|x86.ActiveCfg = Release|Any CPU
+		{539D165F-CF86-4529-A5C8-25FA04B90886}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {19EB723E-2E01-4C78-9B73-D1A5BE6DA91C}
+		SolutionGuid = {1858D4D1-62D5-495E-8181-605341B24DF6}
+	EndGlobalSection
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = Aurio.vsmdi
 	EndGlobalSection
 EndGlobal

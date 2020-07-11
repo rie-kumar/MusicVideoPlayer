@@ -1,0 +1,6 @@
+TODO: Keyboard Hide when switching back menu
+TODO: Separate Download folder for videos
+TODO: Add New Config Button Stuck Selected
+TODO: 
+TODO: 
+TODO: 

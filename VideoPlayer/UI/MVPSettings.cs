@@ -1,14 +1,17 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
 using BS_Utils.Utilities;
+using ModestTree;
 using MusicVideoPlayer.Util;
 using MusicVideoPlayer.YT;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace MusicVideoPlayer.UI
 {
@@ -85,6 +88,74 @@ namespace MusicVideoPlayer.UI
             }
         }
 
+        [UIComponent("howManyDeleted")] private TextMeshProUGUI howManyDeleted;
+
+        [UIComponent("DeleteAllButton")]
+        private Button deleteAllButton;
+
+        [UIComponent("DownloadAllButton")]
+        private Button downloadAllButton;
+
+        [UIAction("DeleteAll")]
+        public void DeleteAll()
+        {
+            deleteAllButton.enabled = false;
+            downloadAllButton.enabled = false;
+            StartCoroutine(DeleteAllCouroutine());
+        }
+
+        public IEnumerator DeleteAllCouroutine()
+        {
+            if (VideoLoader.levelsVideos != null)
+            {
+                Plugin.logger.Debug("Deleting all videos");
+                if (YouTubeDownloader.Instance)
+                {
+                    int levelCount = 0;
+                    foreach (KeyValuePair<IPreviewBeatmapLevel, VideoDatas> keyValuePair in VideoLoader.levelsVideos)
+                    {
+                        levelCount += keyValuePair.Value.Count;
+                    }
+                    howManyDeleted.text = $"0/{levelCount}";
+                    int counter = 0;
+                    foreach (KeyValuePair<IPreviewBeatmapLevel, VideoDatas> videoKvp in VideoLoader.levelsVideos)
+                    {
+                        //if (counter > 30) continue;
+                        foreach (VideoData video in videoKvp.Value.videos)
+                        {
+                            ++counter;
+                            string levelPath = VideoLoader.GetLevelPath(video.level);
+                            var dir = new DirectoryInfo(levelPath);
+                            foreach (var file in dir.EnumerateFiles(video.videoPath.Substring(0, video.videoPath.Length - 4) + "*"))
+                            {
+                                Plugin.logger.Debug($"Deleting {file.Name}");
+                                try
+                                {
+                                    file.Delete();
+                                }
+                                catch (System.IO.IOException e)
+                                {
+                                    //Re-Delete
+                                    Plugin.logger.Error(e);
+                                }
+                                catch (Exception e)
+                                {
+                                    Plugin.logger.Error(e);
+                                }
+                                howManyVideosDone.text = $"{counter}/{levelCount}";
+                            }
+                            yield return null;
+                        }
+                    }
+                    deleteAllButton.enabled = true;
+                    downloadAllButton.enabled = true;
+                }
+                else
+                {
+                    Plugin.logger.Warn("No YTDL Instance");
+                }
+            }
+        }
 
 
         [UIComponent("howManyVideoDone")] private TextMeshProUGUI howManyVideosDone;
@@ -92,41 +163,65 @@ namespace MusicVideoPlayer.UI
         [UIAction("ReDownloadAll")]
         public void ReDownloadAll()
         {
+            deleteAllButton.enabled = false;
+            downloadAllButton.enabled = false;
             StartCoroutine(DownloadAll());
         }
 
+
         public IEnumerator DownloadAll()
         {
-            if (VideoLoader.videos != null)
+            if (VideoLoader.levelsVideos != null)
             {
                 Plugin.logger.Debug("Downloading all videos");
                 if (YouTubeDownloader.Instance)
                 {
-                    int videoCount = VideoLoader.videos.Count;
-                    int videoTotal = videoCount;
-                    howManyVideosDone.text = $"0/{VideoLoader.videos.Count}";
-                    int processCount = 0;
-                    foreach (KeyValuePair<IPreviewBeatmapLevel, VideoData> videoKVP in VideoLoader.videos)
+                    int levelCount = 0;
+                    foreach (KeyValuePair<IPreviewBeatmapLevel, VideoDatas> keyValuePair in VideoLoader.levelsVideos)
                     {
-                        var video = videoKVP.Value;
-                        string command = $"rm {VideoLoader.GetLevelPath(video.level)}\\{video.videoPath}";
-                        Process ytProcess = YouTubeDownloader.Instance.MakeYoutubeProcessAndReturnIt(video);
-                        ytProcess.Exited += (sender, e) =>
-                        {
-                            VideoLoader.SaveVideoToDisk(video);
-                            ytProcess.Dispose();
-                            --processCount;
-                            --videoTotal;
-                            Plugin.logger.Debug($"Video {video.title} downloaded {videoTotal} videos left");
-                            howManyVideosDone.text = $"{videoCount-videoTotal}/{videoCount}";
-                        };
-                        Plugin.logger.Debug($"{processCount} videos currently");
-                        yield return new WaitUntil(() => processCount < 10);
-                        ytProcess.Start();
-                        ++processCount;
-                        Plugin.logger.Debug($"Video {video.title} downloading {processCount} videos currently");
-                        yield return null;
+                        levelCount += keyValuePair.Value.Count;
                     }
+                    int levelTotal = levelCount;
+                    howManyVideosDone.text = $"0/{levelCount}";
+                    int processCount = 0;
+                    int counter = 0;
+                    foreach (KeyValuePair<IPreviewBeatmapLevel, VideoDatas> videoKVP in VideoLoader.levelsVideos)
+                    {
+                        //if(counter > 30) continue;
+                        string levelPath = VideoLoader.GetLevelPath(videoKVP.Value.level);
+                        var dir = new DirectoryInfo(levelPath);
+                        foreach (VideoData video in videoKVP.Value.videos)
+                        {
+                            ++counter;
+                            //Remove Old Video First
+                            foreach (var file in dir.EnumerateFiles(video.videoPath.Substring(0, video.videoPath.Length - 4) + "*"))
+                            {
+                                Plugin.logger.Debug($"Deleting {file.Name}");
+                                try
+                                {
+                                    file.Delete();
+                                }
+                                catch (System.IO.IOException e)
+                                {
+                                    //Re-Delete
+                                    Plugin.logger.Error(e);
+                                }
+                                catch (Exception e)
+                                {
+                                    Plugin.logger.Error(e);
+                                }
+                            }
+                            Plugin.logger.Info($"{YouTubeDownloader.Instance.VideosDownloading} videos currently");
+                            yield return new WaitUntil(() => YouTubeDownloader.Instance.VideosDownloading < 10);
+
+                            YouTubeDownloader.Instance.StartDownload(video, false);
+                            Plugin.logger.Info($"Video {video.title} downloading {YouTubeDownloader.Instance.VideosDownloading} videos currently");
+                            yield return null;
+                        }
+                    }
+                    yield return new WaitUntil(() => YouTubeDownloader.Instance.VideosDownloading < 1);
+                    deleteAllButton.enabled = true;
+                    downloadAllButton.enabled = true;
                 }
                 else
                 {
