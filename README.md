@@ -11,7 +11,7 @@ To begin adding a video, click search. A list of videos will appear, based on th
 
 When the video has downloaded, the preview and offset buttons will allow you to fine tune the video offset to synchronise the beatmap audio to the downloaded video.
 
-[Demo: Downloading a video](https://streamable.com/ayzjn)
+[Demo: Downloading a video](https://streamable.com/ndl9g4)
 
 Download quality can be adjusted, but it is not recommended to go above Medium (720p) because of the distance of the screen from you and the size of the screen any higher than this will net minimal results for 3-4x the file size (1080p). You can also select a screen position from a set of presets.
 
