@@ -159,6 +159,12 @@
     <PackageReference Include="ILRepack.MSBuild.Task">
       <Version>2.0.13</Version>
     </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>12.0.3</Version>
+    </PackageReference>
+    <PackageReference Include="System.Text.Json">
+      <Version>4.7.2</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="ILRepack.targets" />
@@ -169,15 +175,19 @@ mkdir "$(ProjectDir)zipitup"
 mkdir "$(ProjectDir)zipitup\Youtube-dl"
 mkdir "$(ProjectDir)zipitup\Plugins"
 mkdir "$(ProjectDir)zipitup\(Optional) Third Person Camera Files\"
+mkdir "$(ProjectDir)zipitup\Youtube-dl\SyncVideoWithAudio\"
 rem PING -n 5 127.0.0.1&gt;nul
-copy /Y "$(ProjectDir)YT\youtube-dl.exe" "$(ProjectDir)zipitup\Youtube-dl"
-copy /Y "$(ProjectDir)YT\ffmpeg.exe" "$(ProjectDir)zipitup\Youtube-dl"
-rem "Optional"
-copy /Y "$(ProjectDir)(Optional) Third Person Camera Files\" "$(ProjectDir)zipitup\(Optional) Third Person Camera Files\"
-rem "End Optional"
-copy /Y "$(ProjectDir)YT\ffmpeg.exe" "D:\SteamLibrary\steamapps\common\Beat Saber\Youtube-dl"
-copy /Y "$(TargetDir)$(TargetFileName)" "D:\SteamLibrary\steamapps\common\Beat Saber\Plugins\"
-copy /Y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)zipitup\Plugins\"
+xcopy /Y /F "C:\Users\brado\OneDrive\Programs\C#\SelectJsonFromYoutubeDL\bin\Release\netcoreapp3.1\publish\SelectJsonFromYoutubeDL.exe" "$(ProjectDir)zipitup\Youtube-dl\"
+xcopy /Y /S /C /I "C:\Users\brado\OneDrive\Programs\C#\SyncVideoWithAudio\bin\Release" "$(ProjectDir)zipitup\Youtube-dl\SyncVideoWithAudio\"
+xcopy /Y "$(ProjectDir)YT\youtube-dl.exe" "$(ProjectDir)zipitup\Youtube-dl\"
+xcopy /Y "$(ProjectDir)YT\ffmpeg.exe" "$(ProjectDir)zipitup\Youtube-dl\"
+echo "Optional"
+xcopy /Y /S /C /I /F "$(ProjectDir)(Optional) Third Person Camera Files" "$(ProjectDir)zipitup\(Optional) Third Person Camera Files\"
+echo "End Optional"
+xcopy /Y "$(ProjectDir)YT\ffmpeg.exe" "D:\SteamLibrary\steamapps\common\Beat Saber\Youtube-dl\"
+xcopy /Y "$(TargetDir)$(TargetFileName)" "D:\SteamLibrary\steamapps\common\Beat Saber\Plugins\"
+xcopy /Y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)zipitup\Plugins\"
+xcopy /F /S /C /I /Y "$(ProjectDir)zipitup" "D:\SteamLibrary\steamapps\common\Beat Saber\"
 del $(ProjectDir)zipitup.zip
 7z a "$(ProjectDir)zipitup.zip" "$(ProjectDir)zipitup\*" -bb0
 date /t &amp;&amp; time /t</PostBuildEvent>
