@@ -264,7 +264,7 @@ namespace MusicVideoPlayer.YT
             }
 
             Plugin.logger.Debug("Made YTResult4");
-            ytResult.thumbnailURL = videoSearchJson["thumbnail"].ToString().Replace("/vi_webp/", "/vi/").Replace("maxresdefault.webp", "maxresdefault.jpg").Split('?')[0];
+            ytResult.thumbnailURL = videoSearchJson["thumbnail"].ToString().Replace("/vi_webp/", "/vi/").Replace(".webp", ".jpg").Split('?')[0];
             Plugin.logger.Debug("Made YTResult5");
             ytResult.title = videoSearchJson["title"].ToString();
             Plugin.logger.Debug("Made YTResult6");
