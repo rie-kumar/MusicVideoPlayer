@@ -20,64 +20,6 @@ namespace MusicVideoPlayer.YT
         public static List<YTResult> searchResults;
 
         static bool searchInProgress = false;
-        // private static YouTubeSearcher _instance = null;
-        // public static YouTubeSearcher Instance
-        // {
-        //     get
-        //     {
-        //         if (_instance == null)
-        //         {
-        //             _instance = new GameObject("YoutubeSearcher").AddComponent<YouTubeSearcher>();
-        //             DontDestroyOnLoad(_instance);
-        //         }
-        //         return _instance;
-        //     }
-        //     private set => _instance = value;
-        // }
-
-        // public static IEnumerator SearchYoutubeCoroutine(string query)
-        // {
-        //     var youtubeService = new YouTubeService(new BaseClientService.Initializer()
-        //     {
-        //         ApiKey = "***REMOVED***",
-        //         ApplicationName = this.GetType().ToString()
-        //     });
-        //
-        //     var searchListRequest = youtubeService.Search.List("snippet");
-        //     searchListRequest.Q = "Sorry Sorry"; // Replace with your search term.
-        //     searchListRequest.MaxResults = 50;
-        //
-        //     // Call the search.list method to retrieve results matching the specified query term.
-        //     var searchListResponse = await searchListRequest.ExecuteAsync();
-        //
-        //     List<string> videos = new List<string>();
-        //     List<string> channels = new List<string>();
-        //     List<string> playlists = new List<string>();
-        //
-        //     // Add each result to the appropriate list, and then display the lists of
-        //     // matching videos, channels, and playlists.
-        //     foreach (var searchResult in searchListResponse.Items)
-        //     {
-        //         switch (searchResult.Id.Kind)
-        //         {
-        //             case "youtube#video":
-        //                 videos.Add(String.Format("{0} ({1})", searchResult.Snippet.Title, searchResult.Id.VideoId));
-        //                 break;
-        //
-        //             case "youtube#channel":
-        //                 channels.Add(String.Format("{0} ({1})", searchResult.Snippet.Title, searchResult.Id.ChannelId));
-        //                 break;
-        //
-        //             case "youtube#playlist":
-        //                 playlists.Add(String.Format("{0} ({1})", searchResult.Snippet.Title, searchResult.Id.PlaylistId));
-        //                 break;
-        //         }
-        //     }
-        //
-        //     Console.WriteLine(String.Format("Videos:\n{0}\n", string.Join("\n", videos)));
-        //     Console.WriteLine(String.Format("Channels:\n{0}\n", string.Join("\n", channels)));
-        //     Console.WriteLine(String.Format("Playlists:\n{0}\n", string.Join("\n", playlists)));
-        // }
 
         private static bool isReadingOutput;
 
