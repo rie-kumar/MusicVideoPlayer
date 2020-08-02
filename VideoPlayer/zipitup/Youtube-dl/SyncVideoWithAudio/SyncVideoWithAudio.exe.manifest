@@ -150,14 +150,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="SyncVideoWithAudio.exe" size="14304">
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="SyncVideoWithAudio.exe" size="17888">
       <assemblyIdentity name="SyncVideoWithAudio" version="1.0.0.0" language="neutral" processorArchitecture="msil" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>Kr2ry+tX/Bp9k8gqMv/BweWh56zmjqK2pPcnZtj2OfI=</dsig:DigestValue>
+        <dsig:DigestValue>EhAMcy8P/AUIMge50gC/ZdmeuAQxIj7PJGeOar1X4Ow=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>

@@ -1,5 +1,5 @@
 ﻿using System;
-using HtmlAgilityPack;
+// using HtmlAgilityPack;
 using UnityEngine;
 using System.IO;
 using System.Collections;
@@ -23,16 +23,19 @@ namespace MusicVideoPlayer.YT
 
         private static bool isReadingOutput;
 
+
+        //Make youtube process with my special parser to avoid buffer overflows
         private static IEnumerator SearchYoutubeWithMyExeCoroutine(string query, Action callback)
         {
             searchResults = new List<YTResult>();
+            int resultsNumber = 5;
             Plugin.logger.Debug("Starting Search");
             Process searchProcess = new Process
             {
                 StartInfo =
                 {
                     FileName = Environment.CurrentDirectory + "/Youtube-dl/SelectJsonFromYoutubeDL.exe",
-                    Arguments = $"\"{Environment.CurrentDirectory + "/Youtube-dl/youtube-dl.exe"}\" \"{query}\" 5",
+                    Arguments = $"\"{Environment.CurrentDirectory + "/Youtube-dl/youtube-dl.exe"}\" \"{query}\" {resultsNumber}",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
@@ -41,10 +44,10 @@ namespace MusicVideoPlayer.YT
                 EnableRaisingEvents = true,
                 //I think these are added only after Process Started
                 //PriorityClass = ProcessPriorityClass.RealTime,
-                //PriorityBoostEnabled = true
+                PriorityBoostEnabled = true
             };
             Plugin.logger.Debug("Process Made");
-            Plugin.logger.Info($"yt command: {searchProcess.StartInfo.FileName} {searchProcess.StartInfo.Arguments}");
+            Plugin.logger.Info($"yt command: \"{searchProcess.StartInfo.FileName}\" {searchProcess.StartInfo.Arguments}");
             isReadingOutput = false;
             searchProcess.ErrorDataReceived += (sender, e) =>
             {
@@ -56,42 +59,82 @@ namespace MusicVideoPlayer.YT
                 Plugin.logger.Error("Error With the process:");
                 Plugin.logger.Error(e.Data);
             };
-            Plugin.logger.Debug("Error Set");
-            searchProcess.Start();
-            Plugin.logger.Debug("started");
-            searchProcess.BeginErrorReadLine();
-            Plugin.logger.Debug("Error Reading");
-            yield return new WaitUntil(() => searchProcess.HasExited);
-            string[] outputs = searchProcess.StandardOutput.ReadToEnd().Split('\n');
-            foreach (var output in outputs)
+            searchProcess.OutputDataReceived += (sender, e) =>
             {
-                if (output == null || output == "")
+                var output = e.Data.Trim();
+                Plugin.logger.Info(e.Data);
+                if (string.IsNullOrWhiteSpace(output))
                 {
-                    continue;
+                    return;
                 }
                 else if (output.Contains("yt command exited"))
                 {
                     Plugin.logger.Debug("Done with Youtube Search, Processing...");
-                    continue;
+                    return;
                 }
                 else if (output.Contains("yt command"))
                 {
-                    Plugin.logger.Debug($"Running with {output.Trim()}");
-                    continue;
+                    Plugin.logger.Debug($"Running with {output}");
+                    return;
                 }
 
                 try
                 {
-                    var trimmedLine = output.Trim();
+                    var trimmedLine = output;
                     YTResult ytResult = MakeYtResult(trimmedLine);
                     searchResults.Add(ytResult);
+                    if (searchResults.Count >= resultsNumber)
+                    {
+                        ((Process)sender).Kill();
+                    }
                 }
-                catch (Exception e)
+                catch (Exception error)
                 {
-                    Plugin.logger.Debug($"Invalid Response: {output.Trim()}");
-                    Plugin.logger.Error(e);
+                    Plugin.logger.Debug($"Invalid Response: {output}");
+                    Plugin.logger.Error(error);
                 }
-            }
+            };
+            Plugin.logger.Debug("Error Set");
+            searchProcess.Start();
+            var fifteenSeconds = new TimeSpan(15 * TimeSpan.TicksPerSecond);
+            IEnumerator countdown = YouTubeDownloader.Countdown(searchProcess, fifteenSeconds);
+            SharedCoroutineStarter.instance.StartCoroutine(countdown);
+            Plugin.logger.Debug("started");
+            searchProcess.BeginErrorReadLine();
+            searchProcess.BeginOutputReadLine();
+            Plugin.logger.Debug("Error Reading");
+            // var outputs = searchProcess.StandardOutput.ReadToEnd().Split('\n');
+            yield return new WaitUntil(() => searchProcess.HasExited);
+            SharedCoroutineStarter.instance.StopCoroutine(countdown);
+            // foreach (var output in outputs)
+            // {
+            //     if (string.IsNullOrWhiteSpace(output))
+            //     {
+            //         continue;
+            //     }
+            //     else if (output.Contains("yt command exited"))
+            //     {
+            //         Plugin.logger.Debug("Done with Youtube Search, Processing...");
+            //         continue;
+            //     }
+            //     else if (output.Contains("yt command"))
+            //     {
+            //         Plugin.logger.Debug($"Running with {output.Trim()}");
+            //         continue;
+            //     }
+            //
+            //     try
+            //     {
+            //         var trimmedLine = output.Trim();
+            //         YTResult ytResult = MakeYtResult(trimmedLine);
+            //         searchResults.Add(ytResult);
+            //     }
+            //     catch (Exception e)
+            //     {
+            //         Plugin.logger.Debug($"Invalid Response: {output.Trim()}");
+            //         Plugin.logger.Error(e);
+            //     }
+            // }
 
             Plugin.logger.Debug(searchResults.Count.ToString());
             Plugin.logger.Debug("Calling Back");
@@ -182,17 +225,13 @@ namespace MusicVideoPlayer.YT
 
         private static YTResult MakeYtResult(string trimmedLine)
         {
-            Plugin.logger.Debug(trimmedLine);
             JObject videoSearchJson = JsonConvert.DeserializeObject(trimmedLine) as JObject;
-            Plugin.logger.Debug("JSON Made2");
-            Plugin.logger.Debug((videoSearchJson == null).ToString());
             // TimeSpan duration = TimeSpan.FromSeconds(double.Parse(videoSearchJson["duration"].ToString()));
-            YTResult ytResult = new YTResult();
-            Plugin.logger.Debug("Made YTResult1");
-            ytResult.author = videoSearchJson["uploader_id"].ToString();
-            Plugin.logger.Debug("Made YTResult2");
-            ytResult.description = videoSearchJson["description"].ToString();
-            Plugin.logger.Debug("Made YTResult3");
+            YTResult ytResult = new YTResult
+            {
+                author = videoSearchJson["uploader_id"].ToString(),
+                description = videoSearchJson["description"].ToString()
+            };
             try
             {
                 var duration = TimeSpan.FromSeconds(double.Parse(videoSearchJson["duration"].ToString()));
@@ -204,22 +243,16 @@ namespace MusicVideoPlayer.YT
             {
                 ytResult.duration = videoSearchJson["duration"].ToString();
             }
-
-            Plugin.logger.Debug("Made YTResult4");
             ytResult.thumbnailURL = videoSearchJson["thumbnail"].ToString().Replace("/vi_webp/", "/vi/").Replace(".webp", ".jpg").Split('?')[0];
-            Plugin.logger.Debug("Made YTResult5");
             ytResult.title = videoSearchJson["title"].ToString();
-            Plugin.logger.Debug("Made YTResult6");
             ytResult.URL = videoSearchJson["webpage_url"].ToString().Replace("https://www.youtube.com", "");
-            Plugin.logger.Debug("Made YTResult");
-            Plugin.logger.Debug(ytResult.ToString());
             return ytResult;
         }
 
         private static IEnumerator SearchExited(Action callback)
         {
             Plugin.logger.Debug("Process Exited");
-            yield return new WaitForSecondsRealtime(1);
+            // yield return new WaitForSecondsRealtime(1);
             yield return new WaitUntil(() => !isReadingOutput);
 
             // var restOfOutput = searchProcess.StandardOutput.ReadToEnd();
@@ -256,6 +289,7 @@ namespace MusicVideoPlayer.YT
             // }
         }
 
+#if false
         static IEnumerator SearchYoutubeCoroutine(string search, Action callback)
         {
             searchInProgress = true;
@@ -371,6 +405,7 @@ namespace MusicVideoPlayer.YT
             callback?.Invoke();
             searchInProgress = false;
         }
+#endif
 
         public static void Search(string query, Action callback)
         {
@@ -379,7 +414,6 @@ namespace MusicVideoPlayer.YT
                 YouTubeSearcher.SearchYoutubeWithMyExeCoroutine(query, callback));
         }
     }
-
 
     public class YTResult
     {
@@ -392,8 +426,7 @@ namespace MusicVideoPlayer.YT
 
         public new string ToString()
         {
-            return String.Format("{0} by {1} [{2}] \n {3} \n {4} \n {5}", title, author, duration, URL, description,
-                thumbnailURL);
+            return $"{title} by {author} [{duration}] \n {URL} \n {description} \n {thumbnailURL}";
         }
     }
 }

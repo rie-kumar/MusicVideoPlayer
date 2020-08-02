@@ -4,6 +4,7 @@ using MusicVideoPlayer.Util;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -153,7 +154,7 @@ namespace MusicVideoPlayer
             StartCoroutine(WaitForAudioSync());
         }
 
-        private void VideoPlayerErrorReceived(VideoPlayer source, string message)
+        private static void VideoPlayerErrorReceived(VideoPlayer source, string message)
         {
             if (message == "Can't play movie []") return;
             Plugin.logger.Warn("Video player error: " + message);
@@ -166,13 +167,16 @@ namespace MusicVideoPlayer
             {
                 videoPlayer.url = null;
                 vsRenderer.material.color = Color.clear;
+                try{videoPlayer.Prepare();}catch{Plugin.logger.Notice("Oops guess I can't prepare null video");}
                 return;
             }
 
             if (video.downloadState != DownloadState.Downloaded) return;
             videoPlayer.isLooping = video.loop;
 
-            string videoPath = VideoLoader.Instance.GetVideoPath(video);
+            Plugin.logger.Info($"Video has been cut: {video.hasBeenCut}");
+            var videoPath = VideoLoader.GetVideoPath(video, video.hasBeenCut);
+            Plugin.logger.Info($"Loading video: {videoPath}");
             videoPlayer.Pause();
             if (videoPlayer.url != videoPath) videoPlayer.url = videoPath;
             offsetSec = video.offset / 1000f; // ms -> s
@@ -317,6 +321,9 @@ namespace MusicVideoPlayer
 
             if (preview)
             {
+                // Stopwatch startStopwatch = new Stopwatch();
+                // startStopwatch.Start();
+                // yield return new WaitUntil(() => startStopwatch.ElapsedTicks >= startTime*TimeSpan.TicksPerSecond);
                 if (startTime < 0)
                 {
                     videoPlayer.Play();

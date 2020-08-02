@@ -7,10 +7,12 @@ using MusicVideoPlayer.YT;
 using BeatSaberMarkupLanguage.Settings;
 using BS_Utils.Utilities;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
 using System.Linq;
 using BeatSaberMarkupLanguage.GameplaySetup;
+using IPA.Config.Data;
 
 
 namespace MusicVideoPlayer
