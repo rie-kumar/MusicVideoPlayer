@@ -48,7 +48,7 @@ namespace MusicVideoPlayer.Util
 
         public static string GetVideoPath(IBeatmapLevel level)
         {
-            return levelsVideos.TryGetValue(level, out var vids) ? GetVideoPath(vids.ActiveVideo, vids.ActiveVideo.hasBeenCut) : null;
+            return levelsVideos.TryGetValue(level, out var vids) ? GetVideoPath(vids.ActiveVideo, vids.ActiveVideo.HasBeenCut) : null;
         }
 
         public static string GetVideoPath(VideoData video, bool getCutVideo = false)
@@ -413,6 +413,8 @@ namespace MusicVideoPlayer.Util
                 }
             }
 
+            video.DeleteVideoFiles();
+
             //File.Delete(GetVideoPath(video));
             if (alsoRemoveConfig)
             {
@@ -452,11 +454,11 @@ namespace MusicVideoPlayer.Util
 
             vid.level = level;
 
-            if (File.Exists(GetVideoPath(vid)))
-            {
-                vid.downloadState = DownloadState.Downloaded;
-            }
-
+            // if (File.Exists(GetVideoPath(vid)))
+            // {
+            //     vid.downloadState = DownloadState.Downloaded;
+            // }
+            vid.UpdateDownloadState();
             return vid;
         }
 
@@ -490,10 +492,11 @@ namespace MusicVideoPlayer.Util
             {
                 vid.level = level;
 
-                if (File.Exists(GetVideoPath(vid)))
-                {
-                    vid.downloadState = DownloadState.Downloaded;
-                }
+                // if (File.Exists(GetVideoPath(vid)))
+                // {
+                //     vid.downloadState = DownloadState.Downloaded;
+                // }
+                vid.UpdateDownloadState();
             }
 
             return vids;

@@ -313,7 +313,7 @@ namespace MusicVideoPlayer.YT
                     //TODO: check these errors are problems - re-download or skip file when an error occurs
                     //video.downloadState = DownloadState.Cancelled;
                     downloadProgress?.Invoke(video);
-                    if (video.downloadState == DownloadState.Cancelled)
+                    if (video.downloadState == DownloadState.Cancelled || e.Data.Contains("Unable to extract video data"))
                     {
                         DownloadCancelled((Process)sender, video);
                     }
@@ -394,6 +394,7 @@ namespace MusicVideoPlayer.YT
             ydl.BeginOutputReadLine();
             ydl.BeginErrorReadLine();
 
+            int logCount = 0;
             ydl.OutputDataReceived += (sender, e) =>
             {
                 if (e.Data != null)
@@ -412,7 +413,8 @@ namespace MusicVideoPlayer.YT
                         }
                     }
 
-                    Plugin.logger.Info(e.Data);
+                    if(++logCount%10 == 0 || video.downloadProgress > .95)
+                        Plugin.logger.Info(e.Data);
                 }
             };
 
@@ -425,7 +427,7 @@ namespace MusicVideoPlayer.YT
                 downloadProgress?.Invoke(video);
                 download.Update();
 
-                if (video.downloadState == DownloadState.Cancelled)
+                if (video.downloadState == DownloadState.Cancelled || e.Data.Contains("Unable to extract video data"))
                 {
                     DownloadCancelled((Process)sender, video);
                 }
@@ -442,7 +444,8 @@ namespace MusicVideoPlayer.YT
                 }
                 else
                 {
-                    video.downloadState = DownloadState.Downloaded;
+                    // video.downloadState = DownloadState.Downloaded;
+                    video.UpdateDownloadState();
                     VideoLoader.SaveVideoToDisk(video);
                     StartCoroutine(VerifyDownload(video));
                 }

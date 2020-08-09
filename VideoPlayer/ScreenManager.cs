@@ -125,7 +125,8 @@ namespace MusicVideoPlayer
             videoPlayer.targetMaterialRenderer = vsRenderer;
             vsRenderer.material.SetTexture("_MainTex", videoPlayer.texture);
             videoPlayer.errorReceived += VideoPlayerErrorReceived;
-            //videoPlayer.prepareCompleted += VideoPrepared;
+            videoPlayer.prepareCompleted += source => source.Pause();
+            videoPlayer.waitForFirstFrame = true;
 
             OnMenuSceneLoaded();
         }
@@ -162,23 +163,40 @@ namespace MusicVideoPlayer
 
         public void PrepareVideo(VideoData video)
         {
+            StartCoroutine(PrepareVideoCoroutine(video));
+        }
+        public IEnumerator PrepareVideoCoroutine(VideoData video)
+        {
             currentVideo = video;
             if (video == null)
             {
                 videoPlayer.url = null;
                 vsRenderer.material.color = Color.clear;
-                try{videoPlayer.Prepare();}catch{Plugin.logger.Notice("Oops guess I can't prepare null video");}
-                return;
+                try
+                {
+                    videoPlayer.Prepare();
+                }
+                catch
+                {
+                    Plugin.logger.Notice("Oops guess I can't prepare null video");
+                }
+                yield break;
             }
 
-            if (video.downloadState != DownloadState.Downloaded) return;
+            if (video.downloadState != DownloadState.Downloaded) yield break;
             videoPlayer.isLooping = video.loop;
 
-            Plugin.logger.Info($"Video has been cut: {video.hasBeenCut}");
-            var videoPath = VideoLoader.GetVideoPath(video, video.hasBeenCut);
+            Plugin.logger.Info($"Video has been cut: {video.HasBeenCut}");
+            string videoPath;
+            yield return (videoPath = VideoLoader.GetVideoPath(video, video.HasBeenCut));
             Plugin.logger.Info($"Loading video: {videoPath}");
             videoPlayer.Pause();
-            if (videoPlayer.url != videoPath) videoPlayer.url = videoPath;
+            if (videoPlayer.url != videoPath)
+            {
+                yield return new WaitUntil(() => !IsFileLocked(new FileInfo(videoPath)));
+                yield return (videoPlayer.url = videoPath);
+            }
+
             offsetSec = video.offset / 1000f; // ms -> s
             if (video.offset >= 0)
             {
@@ -190,8 +208,27 @@ namespace MusicVideoPlayer
             }
 
             if (!videoPlayer.isPrepared) videoPlayer.Prepare();
-            vsRenderer.material.color = Color.clear;
+            yield return (vsRenderer.material.color = Color.clear);
             videoPlayer.Pause();
+        }
+        private static bool IsFileLocked(FileInfo file)
+        {
+            FileStream stream = null;
+
+            try
+            {
+                stream = file.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+            }
+            catch (IOException)
+            {
+                Plugin.logger.Error($"File {file.FullName} locked");
+                return true;
+            }
+            finally
+            {
+                stream?.Close();
+            }
+            return false;
         }
 
         public void PlayVideo(bool preview)
@@ -321,19 +358,18 @@ namespace MusicVideoPlayer
 
             if (preview)
             {
-                // Stopwatch startStopwatch = new Stopwatch();
-                // startStopwatch.Start();
-                // yield return new WaitUntil(() => startStopwatch.ElapsedTicks >= startTime*TimeSpan.TicksPerSecond);
-                if (startTime < 0)
+                if (startTime >= 0)
                 {
-                    videoPlayer.Play();
-                    yield break;
-                }
-                videoPlayer.frame = 0;
-                while (timeElapsed < startTime)
-                {
-                    timeElapsed += Time.deltaTime;
-                    yield return null;
+                    Stopwatch startStopwatch = new Stopwatch();
+                    startStopwatch.Start();
+                    videoPlayer.frame = 0;
+                    var startTicks = startTime * TimeSpan.TicksPerSecond;
+                    yield return new WaitUntil(() => startStopwatch.ElapsedTicks >= startTicks);
+                    // while (timeElapsed < startTime)
+                    // {
+                    //     timeElapsed += Time.deltaTime;
+                    //     yield return null;
+                    // }
                 }
             }
             else
@@ -398,10 +434,7 @@ namespace MusicVideoPlayer
 
         public bool IsVideoPlayable()
         {
-            if (currentVideo == null || currentVideo.downloadState != DownloadState.Downloaded)
-                return false;
-
-            return true;
+            return currentVideo != null && currentVideo.downloadState == DownloadState.Downloaded;
         }
 
         public Shader GetShader()
