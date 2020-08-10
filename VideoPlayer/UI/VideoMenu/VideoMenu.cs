@@ -411,25 +411,24 @@ namespace MusicVideoPlayer
         private IEnumerator UpdateSearchResults(IEnumerable<YTResult> results)
         {
             Plugin.logger.Info("Updating Search Results");
-            List<CustomListTableData.CustomCellInfo> videos = new List<CustomListTableData.CustomCellInfo>();
+            List<CustomListTableData.CustomCellInfo> videoCells = new List<CustomListTableData.CustomCellInfo>();
             Plugin.logger.Info("List Made");
 
             foreach (var result in results)
             {
-                string description = $"[{result.duration}] {result.description}";
+                var description = $"[{result.duration}] {result.description}";
                 var item = new CustomListTableData.CustomCellInfo(result.title, description);
 
-                UnityWebRequest request = UnityWebRequestTexture.GetTexture(result.thumbnailURL);
+                var request = UnityWebRequestTexture.GetTexture(result.thumbnailURL);
                 yield return request.SendWebRequest();
                 if (request.isNetworkError || request.isHttpError)
-                    Debug.Log(request.error);
+                    Plugin.logger.Debug(request.error);
                 else
                     item.icon = ((DownloadHandlerTexture) request.downloadHandler).texture;
-
-                videos.Add(item);
+                videoCells.Add(item);
             }
 
-            customListTableData.data = videos;
+            customListTableData.data = videoCells;
             customListTableData.tableView.ReloadData();
 
             refineButton.interactable = true;
@@ -512,26 +511,27 @@ namespace MusicVideoPlayer
 
         private IEnumerator OnCutVideoActionPowershell(VideoData videoData)
         {
-            if (false && (selectedVideo == null ||
+            if ((selectedVideo == null ||
                           (!string.IsNullOrEmpty(selectedVideo.cutCommand)) && !selectedVideo.needsCut))
             {
                 Plugin.logger.Info("No Cut Needed");
-                downloadStateText.SetText("No Cut Needed");
+                if(videoData == selectedVideo) downloadStateText.SetText("No Cut Needed");
                 yield break;
             }
 
             if (selectedVideo.HasBeenCut)
             {
                 Plugin.logger.Info("Already Been Cut");
-                downloadStateText.SetText("Already Been Cut");
+                if(videoData == selectedVideo) downloadStateText.SetText("Already Been Cut");
                 yield break;
             }
 
-            downloadStateText.text = "Cutting Song";
+            if(videoData == selectedVideo) downloadStateText.text = "Cutting Song";
             Plugin.logger.Info("Cutting Song");
             string levelFolder = VideoLoader.GetLevelPath(selectedLevel);
-            if (!string.IsNullOrEmpty(selectedVideo.cutCommand))
+            if (string.IsNullOrEmpty(selectedVideo.cutCommand))
             {
+                StartCoroutine(GuessLoading(selectedVideo));
                 yield return StartCoroutine(OnGuessOffsetAction(videoData));
                 yield return new WaitUntil(() => !videoData.isGuessing);
             }
@@ -553,7 +553,7 @@ namespace MusicVideoPlayer
             };
             Plugin.logger.Info(
                 $"yt command: {cutProcess.StartInfo.FileName} {cutProcess.StartInfo.Arguments} @ {cutProcess.StartInfo.WorkingDirectory}");
-            downloadStateText.text = "Cutting Video";
+            if(videoData == selectedVideo) downloadStateText.text = "Cutting Video";
             Plugin.logger.Info("Cutting Video");
             var fileName = "";
             try
@@ -580,7 +580,7 @@ namespace MusicVideoPlayer
                     //     Console.WriteLine(matches[0].Groups[1]);
                     // }
                     selectedVideo.cutVideoPath = fileName.Replace("Done: ", "").Trim('\"', ' ', '\n', '\r');
-                    downloadStateText.text = "Cutting Done";
+                    if(videoData == selectedVideo) downloadStateText.text = "Cutting Done";
                     selectedVideo.HasBeenCut = true;
                 };
                 Plugin.logger.Info("Cutting Starting");
@@ -627,27 +627,27 @@ namespace MusicVideoPlayer
             if ((videoData == null || (!string.IsNullOrEmpty(videoData.cutCommand)) && !videoData.needsCut))
             {
                 Plugin.logger.Info("No Cut Needed");
-                downloadStateText.SetText("No Cut Needed");
+                if(videoData == selectedVideo) downloadStateText.SetText("No Cut Needed");
                 yield break;
             }
             // Check if has been cut before, guessing offset clears this value
             if (videoData.HasBeenCut)
             {
                 Plugin.logger.Info("Already Been Cut");
-                downloadStateText.SetText("Already Been Cut");
+                if(videoData == selectedVideo) downloadStateText.SetText("Already Been Cut");
                 yield break;
             }
             string levelFolder = VideoLoader.GetLevelPath(videoData.level);
             if (!string.IsNullOrEmpty(videoData.cutCommand))
             {
-                StartCoroutine(GuessLoading());
+                StartCoroutine(GuessLoading(selectedVideo));
                 // guess offset "synchronously" inside this coroutine
                 yield return StartCoroutine(OnGuessOffsetAction(videoData));
                 // Wait until GuessSucceeded or GuessFailed is done
                 yield return new WaitUntil(() => !videoData.isGuessing);
             }
 
-            downloadStateText.text = "Cutting Song";
+            if(videoData == selectedVideo) downloadStateText.text = "Cutting Song";
             Plugin.logger.Info("Cutting Song");
 
             var videoFile = videoData.cutVideoArgs[0];
@@ -670,15 +670,17 @@ namespace MusicVideoPlayer
                 var startAndLength = startsAndLengths[i];
                 var cutProcess = MakeFfmpegCutProcess(startAndLength.start, startAndLength.length, videoFile,
                     levelFolder, $"file{i}.mp4");
+                var i1 = i;
                 cutProcess.Exited += (sender, args) =>
                 {
                     if (cutProcess.ExitCode != 0)
                     {
-                        Plugin.logger.Error("Ffmpeg Concat Process failed");
-                        downloadStateText.text = "Ffmpeg Concat Process failed";
+                        var message = "Ffmpeg Concat Process failed, try re-downloading file";
+                        Plugin.logger.Error(message);
+                        if(videoData == selectedVideo) downloadStateText.text = message;
                         return;
                     }
-                    concatFiles.Add($"file{i}.mp4");
+                    concatFiles.Add($"file{i1}.mp4");
                     try
                     {
                         cutProcess?.Dispose();
@@ -710,7 +712,7 @@ namespace MusicVideoPlayer
             }
             var concatFileLines = from file in concatFiles select $"file {file}";
             File.WriteAllLines(levelFolder + "/concat.txt", concatFileLines);
-            downloadStateText.text = "Cutting Video";
+            if(videoData == selectedVideo) downloadStateText.text = "Cutting Video";
             Plugin.logger.Info("Cutting Video");
             var concatProcess = MakeFfmpegConcatProcess(outFile, levelFolder);
             concatProcess.Exited += (sender, args) =>
@@ -718,7 +720,7 @@ namespace MusicVideoPlayer
                 if (concatProcess.ExitCode != 0)
                 {
                     Plugin.logger.Error("Ffmpeg Concat Process failed");
-                    downloadStateText.text = "Ffmpeg Concat Process failed";
+                    if(videoData == selectedVideo) downloadStateText.text = "Ffmpeg Concat Process failed";
                     return;
                 }
 
@@ -744,7 +746,7 @@ namespace MusicVideoPlayer
                 }
                 videoData.HasBeenCut = true;
                 videoData.cutVideoPath = outFile;
-                downloadStateText.text = "Cutting Offset Done";
+                if(videoData == selectedVideo) downloadStateText.text = "Cutting Offset Done";
                 Plugin.logger.Info("Cutting Offset done?");
                 if (selectedVideo != videoData) return;
                 LoadVideoSettings(videoData);
@@ -832,7 +834,7 @@ namespace MusicVideoPlayer
         private void OnGuessOffsetActionWrapper()
         {
             selectedVideo.isGuessing = true;
-            StartCoroutine(GuessLoading());
+            StartCoroutine(GuessLoading(selectedVideo));
             StartCoroutine(OnGuessOffsetAction(selectedVideo));
         }
 
@@ -842,12 +844,12 @@ namespace MusicVideoPlayer
             selectedVideo.ResetGuess();
         }
 
-        private IEnumerator GuessLoading()
+        private IEnumerator GuessLoading(VideoData videoData)
         {
             var loadingText = "Guessing Offset";
             // downloadStateText.gameObject.SetActive(true);
             var periods = "";
-            while (selectedVideo.isGuessing)
+            while (videoData.isGuessing)
             {
                 if (periods.Length < 3)
                 {
@@ -858,7 +860,7 @@ namespace MusicVideoPlayer
                     periods = "";
                 }
 
-                downloadStateText.SetText(loadingText + periods);
+                if(videoData == selectedVideo) downloadStateText.SetText(loadingText + periods);
 
                 yield return new WaitForSeconds(0.5f);
             }
@@ -889,7 +891,7 @@ namespace MusicVideoPlayer
             }
             catch
             {
-                downloadStateText.text = "No Official Support Yet";
+                if(videoData == selectedVideo) downloadStateText.text = "No Official Support Yet";
                 Plugin.logger.Debug(videoData.level.GetType().ToString());
                 GuessOffsetFailed(videoData);
                 throw new NotImplementedException("No Official Support Yet");
@@ -960,7 +962,7 @@ namespace MusicVideoPlayer
             // ffmpegProcess.PriorityBoostEnabled = true;
             // Plugin.logger.Debug(ffmpegProcess.HasExited.ToString());
             // yield return new WaitUntil(() => ffmpegProcess.HasExited);
-            downloadStateText.text = "Guessing Offset";
+            if(videoData == selectedVideo) downloadStateText.text = "Guessing Offset";
             Plugin.logger.Info("Guessing Offset");
             var offsetProcess = new Process
             {
@@ -998,7 +1000,7 @@ namespace MusicVideoPlayer
                     Plugin.logger.Info("Guess Offset done!");
                     if (offsetProcess.ExitCode != 0)
                     {
-                        downloadStateText.text = "Error Occurred While Guessing";
+                        if(videoData == selectedVideo) downloadStateText.text = "Error Occurred While Guessing";
                     }
 
                     Plugin.logger.Info($"GO->{videoData.offsetGuess}->BS");
@@ -1086,7 +1088,7 @@ namespace MusicVideoPlayer
             Plugin.logger.Error($"Offset Guess is: {videoData.offsetGuess}");
             videoData.isGuessing = false;
             if(selectedVideo == videoData)
-                downloadStateText.text = "Offset Guess Failed";
+                if(videoData == selectedVideo) downloadStateText.text = "Offset Guess Failed";
         }
 
         private IEnumerator GuessOffsetSucceeded(VideoData videoData)
@@ -1110,7 +1112,7 @@ namespace MusicVideoPlayer
                 yield break;
             }
 
-            downloadStateText.text = "Guess Successful and " + (_needsCut ? "Needs Cut" : "No Cut");
+            if(videoData == selectedVideo) downloadStateText.text = "Guess Successful and " + (_needsCut ? "Needs Cut" : "No Cut");
             videoData.isGuessing = false;
             Save(videoData);
         }
@@ -1367,7 +1369,9 @@ namespace MusicVideoPlayer
             selectedLevel = level;
             selectedVideo = null;
             ChangeView(false);
-            Plugin.logger.Debug("Selected Level: " + level.songName);
+            Plugin.logger.Debug($"Selected Level: {level.songName}");
+            //Get Results but only pass if string is the same
+            StartCoroutine(YouTubeSearcher.SearchYoutubeWithMyExeCoroutine($"{selectedLevel.songName} - {selectedLevel.songAuthorName}", null, 15));
         }
 
         private void GameSceneLoaded()

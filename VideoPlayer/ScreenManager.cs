@@ -191,10 +191,18 @@ namespace MusicVideoPlayer
             yield return (videoPath = VideoLoader.GetVideoPath(video, video.HasBeenCut));
             Plugin.logger.Info($"Loading video: {videoPath}");
             videoPlayer.Pause();
+            var lockTimer = new Stopwatch();
+            lockTimer.Start();
+            var videoFileInfo = new FileInfo(videoPath);
             if (videoPlayer.url != videoPath)
             {
-                yield return new WaitUntil(() => !IsFileLocked(new FileInfo(videoPath)));
+                yield return new WaitUntil(() => !IsFileLocked(videoFileInfo) || lockTimer.ElapsedTicks > 12 * TimeSpan.TicksPerSecond);
                 yield return (videoPlayer.url = videoPath);
+            }
+            lockTimer.Stop();
+            if (lockTimer.ElapsedTicks > 12 * TimeSpan.TicksPerSecond && !IsFileLocked(videoFileInfo))
+            {
+                throw new Exception("File Locked");
             }
 
             offsetSec = video.offset / 1000f; // ms -> s
@@ -221,7 +229,6 @@ namespace MusicVideoPlayer
             }
             catch (IOException)
             {
-                Plugin.logger.Error($"File {file.FullName} locked");
                 return true;
             }
             finally

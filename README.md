@@ -27,6 +27,7 @@ Requires BSUtils & BSML.
 * These are automatically created for downloaded files
 * Compatible with a wide range of video formats (check VideoPlayer Unity docs)
 * Supports manual sync, looping, thumbnails and metadata
+* Automatically set offsets and cut videos with breaks in them
 
 **Download Videos in game**
 * Use the provided keyboard or the shortcut buttons to fill in your search query

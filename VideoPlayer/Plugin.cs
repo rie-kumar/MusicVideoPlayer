@@ -38,7 +38,7 @@ namespace MusicVideoPlayer
             Base64Sprites.ConvertToSprites();
         }
 
-        private void OnMenuSceneLoadedFresh(ScenesTransitionSetupDataSO scenesTransition)
+        private static void OnMenuSceneLoadedFresh(ScenesTransitionSetupDataSO scenesTransition)
         {
             YouTubeDownloader.OnLoad();
             ScreenManager.OnLoad();
