@@ -110,8 +110,7 @@ namespace MusicVideoPlayer
             videoScreen.transform.localPosition = Vector3.zero;
             videoScreen.transform.localScale = new Vector3(16f / 9f, 1, 1);
             vsRenderer = videoScreen.GetComponent<Renderer>();
-            vsRenderer.material = new Material(GetShader());
-            vsRenderer.material.color = Color.clear;
+            vsRenderer.material = new Material(GetShader()) {color = Color.clear};
 
             screen.transform.position = VideoPlacementSetting.Position(placement);
             screen.transform.eulerAngles = VideoPlacementSetting.Rotation(placement);
@@ -138,15 +137,15 @@ namespace MusicVideoPlayer
 
         private void OnMenuSceneLoadedFresh(ScenesTransitionSetupDataSO scenesTransition)
         {
-            if (currentVideo != null) PrepareVideo(currentVideo);
-            PauseVideo();
+            // if (currentVideo != null) PrepareVideo(currentVideo);
+            // PauseVideo();
             //HideScreen();
         }
 
         private void OnMenuSceneLoaded()
         {
-            if (currentVideo != null) PrepareVideo(currentVideo);
-            PauseVideo();
+            // if (currentVideo != null) PrepareVideo(currentVideo);
+            // PauseVideo();
             //HideScreen();
         }
 
@@ -165,8 +164,19 @@ namespace MusicVideoPlayer
         {
             StartCoroutine(PrepareVideoCoroutine(video));
         }
+
+        public void PrepareVideoSync(VideoData video)
+        {
+            var prepareVideoCoroutine = PrepareVideoCoroutine(video);
+            while (prepareVideoCoroutine.MoveNext())
+            {
+            }
+        }
+
+        // private VideoPlayer.EventHandler videoPlayerOnprepareCompleted;
         public IEnumerator PrepareVideoCoroutine(VideoData video)
         {
+            // if (videoPlayerOnprepareCompleted != null) videoPlayer.prepareCompleted -= videoPlayerOnprepareCompleted;
             currentVideo = video;
             if (video == null)
             {
@@ -175,11 +185,13 @@ namespace MusicVideoPlayer
                 try
                 {
                     videoPlayer.Prepare();
+                    Plugin.logger.Notice("Prepared null video");
                 }
                 catch
                 {
                     Plugin.logger.Notice("Oops guess I can't prepare null video");
                 }
+
                 yield break;
             }
 
@@ -188,7 +200,7 @@ namespace MusicVideoPlayer
 
             Plugin.logger.Info($"Video has been cut: {video.HasBeenCut}");
             string videoPath;
-            yield return (videoPath = VideoLoader.GetVideoPath(video, video.HasBeenCut));
+            yield return (videoPath = video.CorrectVideoPath); // VideoLoader.GetVideoPath(video, video.HasBeenCut));
             Plugin.logger.Info($"Loading video: {videoPath}");
             videoPlayer.Pause();
             var lockTimer = new Stopwatch();
@@ -196,29 +208,53 @@ namespace MusicVideoPlayer
             var videoFileInfo = new FileInfo(videoPath);
             if (videoPlayer.url != videoPath)
             {
-                yield return new WaitUntil(() => !IsFileLocked(videoFileInfo) || lockTimer.ElapsedTicks > 12 * TimeSpan.TicksPerSecond);
+                yield return new WaitUntil(() =>
+                    !IsFileLocked(videoFileInfo) || lockTimer.ElapsedTicks > 12 * TimeSpan.TicksPerSecond);
                 yield return (videoPlayer.url = videoPath);
             }
+
             lockTimer.Stop();
-            if (lockTimer.ElapsedTicks > 12 * TimeSpan.TicksPerSecond && !IsFileLocked(videoFileInfo))
+            if (lockTimer.ElapsedTicks > 12 * TimeSpan.TicksPerSecond && IsFileLocked(videoFileInfo))
             {
                 throw new Exception("File Locked");
             }
 
             offsetSec = video.offset / 1000f; // ms -> s
-            if (video.offset >= 0)
+            var correctVideoTime = video.offset >= 0 ? offsetSec : 0;
+
+            var correctVideoFrame = (int) Math.Round(videoPlayer.frameRate * correctVideoTime);
+            yield return (vsRenderer.material.color = Color.clear);
+            videoPlayer.Prepare();
+            // videoPlayerOnprepareCompleted = source => SeekVideoToTime(correctVideoTime);
+            // videoPlayer.prepareCompleted += videoPlayerOnprepareCompleted;
+            Plugin.logger.Debug("Preparing");
+            yield return new WaitUntil(() =>
             {
-                videoPlayer.time = offsetSec;
-            }
-            else
+                Plugin.logger.Debug(
+                    $"{(videoPlayer.isPrepared ? "Prepared" : "Not Prepared")}\t{(videoPlayer.canSetTime ? "canSetTime" : "Not canSetTime")}");
+                return videoPlayer.isPrepared;
+            });
+            Plugin.logger.Debug(
+                $"{(videoPlayer.isPrepared ? "Prepared" : "Not Prepared")}\t{(videoPlayer.canSetTime ? "canSetTime" : "Not canSetTime")}");
+            Plugin.logger.Debug("Seeking");
+            while (Math.Abs(videoPlayer.time - correctVideoTime) > .050 || (videoPlayer.frame - correctVideoFrame) > 2)
             {
-                videoPlayer.time = 0;
+                yield return SeekVideoToTime(correctVideoTime);
             }
 
-            if (!videoPlayer.isPrepared) videoPlayer.Prepare();
-            yield return (vsRenderer.material.color = Color.clear);
+            Plugin.logger.Info(
+                $"Times are {videoPlayer.time}:{correctVideoTime}\tFrames are {videoPlayer.frame}:{correctVideoFrame}\t{(videoPlayer.isPrepared ? "Prepared" : "Not Prepared")}\t{(videoPlayer.isPaused ? "Paused" : "Not Paused")}");
+        }
+
+        private IEnumerator SeekVideoToTime(float correctVideoTime)
+        {
+            // int correctVideoFrame = (int)Math.Round(videoPlayer.frameRate * correctVideoTime);
+            // Plugin.logger.Debug($"Times are {videoPlayer.time}:{correctVideoTime}\tFrames are {videoPlayer.frame}:{correctVideoFrame}\t{(videoPlayer.isPrepared ? "Prepared" : "NotPrepared")}\t{(videoPlayer.canSetTime ? "canSetTime" : "Not canSetTime")}");
+            yield return videoPlayer.time = correctVideoTime;
+            // if (!videoPlayer.isPrepared) videoPlayer.Prepare();
             videoPlayer.Pause();
         }
+
         private static bool IsFileLocked(FileInfo file)
         {
             FileStream stream = null;
@@ -235,12 +271,15 @@ namespace MusicVideoPlayer
             {
                 stream?.Close();
             }
+
             return false;
         }
 
         public void PlayVideo(bool preview)
         {
-            if (currentVideo == null || currentVideo.downloadState != DownloadState.Downloaded || (!showVideo && !preview)) //If the current video is null or not downloaded or show video is off AND it isn't a preview hide the screen
+            if (currentVideo == null || currentVideo.downloadState != DownloadState.Downloaded ||
+                (!showVideo && !preview)
+            ) //If the current video is null or not downloaded or show video is off AND it isn't a preview hide the screen
             {
                 HideScreen();
                 return;
@@ -251,47 +290,47 @@ namespace MusicVideoPlayer
             float practiceSettingsSongStart = 0;
             if (!preview)
             {
-                if (instanceEnvironmentSpawnRotation != null) // will be null when previewing
+                //instanceEnvironmentSpawnRotation.didRotateEvent += ChangeRotation360; // Set up event for running 360 video (will simply do nothing for regular video)
+                try // Try to get these as errors happen when only previewing (and they are unnecessary)
                 {
-                    //instanceEnvironmentSpawnRotation.didRotateEvent += ChangeRotation360; // Set up event for running 360 video (will simply do nothing for regular video)
-                    try // Try to get these as errors happen when only previewing (and they are unnecessary)
+                    try // Try to get these as there will be a null reference if not in practice mode or only previewing
                     {
-                        try // Try to get these as there will be a null reference if not in practice mode or only previewing
-                        {
-                            practiceSettingsSongStart = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.startSongTime - 1;
-                            if (practiceSettingsSongStart < 0)
-                            {
-                                practiceSettingsSongStart = 0;
-                            }
-                        }
-                        catch (NullReferenceException)
+                        practiceSettingsSongStart =
+                            BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.startSongTime - 1;
+                        if (practiceSettingsSongStart < 0)
                         {
                             practiceSettingsSongStart = 0;
                         }
-
-                        float songSpeed = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.gameplayModifiers.songSpeedMul;
-                        videoPlayer.playbackSpeed =
-                            BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings != null
-                                ? BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.songSpeedMul
-                                : songSpeed; // Set video speed to practice or non-practice speed
-
-                        if (offsetSec + practiceSettingsSongStart > 0)
-                        {
-                            videoPlayer.time = offsetSec + practiceSettingsSongStart;
-                        }
-                        else
-                        {
-                            videoPlayer.time = 0;
-                        }
                     }
-                    catch (Exception e)
+                    catch (NullReferenceException)
                     {
-                        Plugin.logger.Debug("Probably cause previews don't have speed mults");
-                        Plugin.logger.Error(e.ToString());
+                        practiceSettingsSongStart = 0;
+                    }
+
+                    float songSpeed = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.gameplayModifiers.songSpeedMul;
+                    videoPlayer.playbackSpeed =
+                        BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings != null
+                            ? BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.songSpeedMul
+                            : songSpeed; // Set video speed to practice or non-practice speed
+
+                    if (offsetSec + practiceSettingsSongStart > 0)
+                    {
+                        videoPlayer.time = offsetSec + practiceSettingsSongStart;
+                    }
+                    else
+                    {
+                        videoPlayer.time = 0;
                     }
                 }
+                catch (Exception e)
+                {
+                    Plugin.logger.Debug("Probably cause previews don't have speed mults");
+                    Plugin.logger.Error(e.ToString());
+                }
 
-                for (ushort track = 0; track < videoPlayer.audioTrackCount; track++) // For Each Track -> Decrease Audio volume to 0 on that track
+                for (ushort track = 0;
+                    track < videoPlayer.audioTrackCount;
+                    track++) // For Each Track -> Decrease Audio volume to 0 on that track
                 {
                     // videoPlayer.SetDirectAudioMute(track, true);
                     videoPlayer.SetDirectAudioVolume(track, 0f);
@@ -303,7 +342,9 @@ namespace MusicVideoPlayer
                 videoPlayer.playbackSpeed = 1;
                 //TODO: Make Left Ear Audio the Preview and Right Ear Audio the BeatMap
                 //ushort videoTrack = 1;
-                for (ushort track = 0; track < videoPlayer.audioTrackCount; track++) // For Each Track -> Increase Audio volume to .5 (float) on that track
+                for (ushort track = 0;
+                    track < videoPlayer.audioTrackCount;
+                    track++) // For Each Track -> Increase Audio volume to .5 (float) on that track
                 {
                     //if (track != videoTrack) { videoPlayer.SetDirectAudioVolume(track, 0f); continue;}
                     videoPlayer.SetDirectAudioVolume(track, playPreviewAudio ? .8f : 0f);
@@ -334,7 +375,7 @@ namespace MusicVideoPlayer
             {
                 Plugin.logger.Debug("Video is playing!");
 
-                if (videoPlayer.time != offsetSec)
+                if (Math.Abs(videoPlayer.time - offsetSec) > 0.050)
                 {
                     // game was restarted
                     if (currentVideo.offset >= 0)

@@ -28,6 +28,7 @@ using UnityEngine.Networking;
 using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
 using Image = UnityEngine.UI.Image;
+// ReSharper disable UnusedMember.Local
 
 namespace MusicVideoPlayer
 {
@@ -163,7 +164,18 @@ namespace MusicVideoPlayer
         }
 
         #region Public Methods
-        
+
+        public void LoadVideoSettingsIfSameVideo(VideoData videoData)
+        {
+            VideoDatas videoDatas = VideoLoader.GetVideos(videoData.level);
+            if (selectedLevel != videoData.level || videoTitleText.text == "No Video" ||
+                videoDatas.videos.IndexOf(videoData) != videoDatas.activeVideo)
+            {
+                Plugin.logger.Info("Not Same Video");
+                return;
+            }
+            LoadVideoSettings(videoData, false);
+        }
         public void LoadVideoSettings(VideoData videoData, bool checkForVideo = true)
         {
             Plugin.logger.Info($"Stopping Preview");
@@ -198,8 +210,7 @@ namespace MusicVideoPlayer
 
             LoadVideoDownloadState();
 
-            Plugin.logger.Debug("Has Loaded: " + selectedVideo);
-            Plugin.logger.Debug("Video is: " + downloadStateText.text);
+            Plugin.logger.Debug("Has Loaded: " + selectedVideo + "Video is: " + downloadStateText.text);
             ScreenManager.Instance.PrepareVideo(selectedVideo);
         }
 
@@ -262,17 +273,10 @@ namespace MusicVideoPlayer
 
         private void SetPreviewState()
         {
-            if (isPreviewing)
-            {
-                previewButtonText.text = "Stop";
-            }
-            else
-            {
-                previewButtonText.text = "Preview";
-            }
+            previewButtonText.text = isPreviewing ? "Stop" : "Preview";
         }
 
-        private void StopPreview(bool stopPreviewMusic)
+        private bool StopPreview(bool stopPreviewMusic)
         {
             isPreviewing = false;
             ScreenManager.Instance.PrepareVideo(selectedVideo);
@@ -283,6 +287,7 @@ namespace MusicVideoPlayer
             }
 
             SetPreviewState();
+            return true;
         }
 
         private void ChangeView(bool searchView)
@@ -320,6 +325,7 @@ namespace MusicVideoPlayer
 
             StopCoroutine(SearchLoading());
 
+            System.Diagnostics.Debug.Assert(customListTableData.data != null, "customListTableData.data != null");
             if (customListTableData.data != null || customListTableData.data.Count > 0)
             {
                 customListTableData.data.Clear();
@@ -871,6 +877,7 @@ namespace MusicVideoPlayer
         private IEnumerator OnGuessOffsetAction([CanBeNull] VideoData videoData, string alignOrOffset = "align")
         {
             if (videoData == null) yield break;
+            Plugin.logger.Info("Guessing Offset");
             videoData.isGuessing = true;
             var levelFolder = VideoLoader.GetLevelPath(videoData.level);
             string videoAbsolutePath;
@@ -962,7 +969,7 @@ namespace MusicVideoPlayer
             // ffmpegProcess.PriorityBoostEnabled = true;
             // Plugin.logger.Debug(ffmpegProcess.HasExited.ToString());
             // yield return new WaitUntil(() => ffmpegProcess.HasExited);
-            if(videoData == selectedVideo) downloadStateText.text = "Guessing Offset";
+            StartCoroutine(GuessLoading(videoData));
             Plugin.logger.Info("Guessing Offset");
             var offsetProcess = new Process
             {
@@ -1062,11 +1069,9 @@ namespace MusicVideoPlayer
 
                     StartCoroutine(GuessOffsetSucceeded(videoData));
                 };
-                Plugin.logger.Info("Guess Starting");
                 offsetProcess.Start();
                 // offsetProcess.BeginOutputReadLine();
                 offsetProcess.BeginErrorReadLine();
-                Plugin.logger.Info("Guess Started");
             }
             catch (Exception e)
             {
@@ -1080,7 +1085,6 @@ namespace MusicVideoPlayer
             // offsetProcess.PriorityBoostEnabled = true;
             //Plugin.logger.Debug(offsetProcess.HasExited.ToString());
             //yield return new WaitUntil(() => offsetProcess.HasExited);
-            Plugin.logger.Info("Guess Offset done?");
         }
 
         private void GuessOffsetFailed(VideoData videoData)
@@ -1129,9 +1133,9 @@ namespace MusicVideoPlayer
                     offsetMagnitude = 100;
                     break;
                 case 100:
-                    offsetMagnitude = 10;
+                    offsetMagnitude = 20;
                     break;
-                case 10:
+                case 20:
                     offsetMagnitude = 1000;
                     break;
                 // default:
@@ -1236,26 +1240,32 @@ namespace MusicVideoPlayer
         }
 
         [UIAction("on-preview-action")]
-        private void OnPreviewAction()
+        private void OnPreviewActionWrapper()
+        {
+            StartCoroutine(OnPreviewAction());
+        }
+        
+        private IEnumerator OnPreviewAction()
         {
             if (isPreviewing)
             {
-                StopPreview(true);
+                yield return StopPreview(true);
             }
             else
             {
-                isPreviewing = true;
+                yield return isPreviewing = true;
                 if (!ScreenManager.Instance.videoPlayer.isPrepared)
                 {
                     Plugin.logger.Info("Not Prepped yet");
                 }
-                ScreenManager.Instance.PrepareVideo(selectedVideo);
+                yield return ScreenManager.Instance.PrepareVideoCoroutine(selectedVideo); // Prepare Synchronously? ¯\_(ツ)_/¯
+                Plugin.logger.Debug("Done Prepping");
                 ScreenManager.Instance.PlayVideo(true);
-                songPreviewPlayer.volume = 1;
+                Plugin.logger.Debug("Playing");
+                yield return songPreviewPlayer.volume = 1;
                 songPreviewPlayer.CrossfadeTo(selectedLevel.GetPreviewAudioClipAsync(new CancellationToken()).Result, 0,
                     selectedLevel.songDuration, 1f);
             }
-
             SetPreviewState();
         }
 
@@ -1335,7 +1345,8 @@ namespace MusicVideoPlayer
 
             YouTubeSearcher.Search(query, () =>
             {
-                updateSearchResultsCoroutine = UpdateSearchResults(YouTubeSearcher.searchResults);
+                // Shouldn't throw InvalidOperationException but might if searchResults is changed
+                updateSearchResultsCoroutine = UpdateSearchResults(YouTubeSearcher.searchResults.ToList());
                 StartCoroutine(updateSearchResultsCoroutine);
             });
         }
@@ -1355,8 +1366,7 @@ namespace MusicVideoPlayer
                 Plugin.logger.Info("Not Same Video");
                 return;
             }
-            ChangeView(false);
-            LoadVideoSettings(video);
+            LoadVideoDownloadState();
         }
 
         #endregion

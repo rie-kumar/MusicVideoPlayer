@@ -9,6 +9,7 @@ using UnityEngine;
 using MusicVideoPlayer.Util;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Timers;
 using MusicVideoPlayer.UI;
 
 namespace MusicVideoPlayer.YT
@@ -269,42 +270,27 @@ namespace MusicVideoPlayer.YT
                 Plugin.logger.Info(
                     $"yt command: {localDownloader.StartInfo.FileName} {localDownloader.StartInfo.Arguments}");
 
-                yield return localDownloader.Start();
                 var countdown = Countdown(localDownloader, new TimeSpan(0, 1, 0));
-                StartCoroutine(countdown);
-
-//                Plugin.logger.Debug("Started Downloaded For Realsies");
-                // Hook up our output to console
-                localDownloader.BeginOutputReadLine();
-                localDownloader.BeginErrorReadLine();
-
+                // var outputCount = 0;
+                var timer = new Timer(250);
+                timer.Elapsed += (sender, args) => downloadProgress?.Invoke(video);
                 localDownloader.OutputDataReceived += (sender, e) =>
                 {
-                    if (e.Data == null) return;
-                    Regex rx = new Regex(@"(\d*).\d%+");
-                    Match match = rx.Match(e.Data);
-                    if (match.Success)
+                    if (video.downloadState == DownloadState.Cancelled)
                     {
-                        video.downloadProgress =
-                            float.Parse(match.Value.Substring(0, match.Value.Length - 1)) / 100;
-                        downloadProgress?.Invoke(video);
-
-                        if (video.downloadState == DownloadState.Cancelled)
+                        (sender as Process)?.Kill();
+                        Plugin.logger.Info("Cancelled");
+                        VideoLoader.DeleteVideo(video, false);
+                        try
                         {
-                            (sender as Process)?.Kill();
-                            Plugin.logger.Info("Cancelled");
-                            VideoLoader.DeleteVideo(video, false);
-                            try
-                            {
-                                ((Process) sender)?.Dispose();
-                            }
-                            catch { }
-
-                            YouTubeDownloader.externalProcesses.Remove(sender as Process);
+                            ((Process) sender)?.Dispose();
                         }
-                    }
+                        catch { }
 
-                    if (logProgress) Plugin.logger.Info(e.Data);
+                        YouTubeDownloader.externalProcesses.Remove(sender as Process);
+                    }
+                    // if(++outputCount % 10 != 0) return;
+                    ParseDownload(video, logProgress, e);
                 };
                 localDownloader.ErrorDataReceived += (sender, e) =>
                 {
@@ -320,6 +306,8 @@ namespace MusicVideoPlayer.YT
                 };
                 localDownloader.Exited += (sender, e) =>
                 {
+                    timer.Stop();
+                    timer.Close();
                     StopCoroutine(countdown);
                     DecrementDownloadCount();
                     if (video.downloadState == DownloadState.Cancelled)
@@ -342,8 +330,30 @@ namespace MusicVideoPlayer.YT
                     }
                     catch { }
                     YouTubeDownloader.externalProcesses.Remove(localDownloader);
-                };
+                    VideoMenu.instance.LoadVideoSettingsIfSameVideo(video);
+                }; 
+                timer.Start();
+                yield return localDownloader.Start();
+                StartCoroutine(countdown);
+
+//                Plugin.logger.Debug("Started Downloaded For Realsies");
+                // Hook up our output to console
+                localDownloader.BeginOutputReadLine();
+                localDownloader.BeginErrorReadLine();
             }
+        }
+
+        private void ParseDownload(VideoData video, bool logProgress, DataReceivedEventArgs dataReceivedEventArgs)
+        {
+            if (dataReceivedEventArgs.Data == null) return;
+            Regex rx = new Regex(@"(\d*).\d%+");
+            Match match = rx.Match(dataReceivedEventArgs.Data);
+            if (match.Success)
+            {
+                video.downloadProgress =
+                    float.Parse(match.Value.Substring(0, match.Value.Length - 1)) / 100;
+            }
+            if (logProgress) Plugin.logger.Info(dataReceivedEventArgs.Data);
         }
 
         private IEnumerator DownloadVideo()
@@ -566,9 +576,9 @@ namespace MusicVideoPlayer.YT
         private void Timeout()
         {
             VideoDownload download = videoQueue.Dequeue();
-            ydl.Close(); // or .Kill()
             try
             {
+                ydl.Kill(); // or .Close()
                 ydl?.Dispose();
             }
             catch { }
