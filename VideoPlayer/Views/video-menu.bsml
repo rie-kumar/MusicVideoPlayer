@@ -1,9 +1,9 @@
-<bg id='root-object' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
+<bg id='root-object' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation="https://monkeymanboy.github.io/BSML-Docs https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd">
   <bg id='video-details'>
     <vertical child-control-height='false'>
     <horizontal pad='3' preferred-width='120' horizontal-fit='PreferredSize'>
       <button id='prev-video' pref-width='7' preferred-height='5' on-click='prev-video-action' text='🢤'/>
-      <text id='video-title' align='Center' overflow-mode='Ellipsis' text='No Video'/>
+      <text font-size='2' id='video-title' align='Center' overflow-mode='Ellipsis' text='No Video'/>
       <button id='next-video' pref-width='7' preferred-height='5' on-click='next-video-action' text='➩'/>
     </horizontal>
     <horizontal pad='5'>
@@ -19,7 +19,7 @@
       <vertical vertical-fit='PreferredSize' horizontal-fit='PreferredSize' spacing='0' pad-bottom='30'>
         <horizontal pad-top='0' spacing='3' horizontal-fit='PreferredSize'>
           <button id='offset-decrease-button' hover-hint='Starts Video Later' text='-' pad='0' on-click='on-offset-decrease-action' all-uppercase='false' pref-width='5' pref-height='5'/>
-          <text id='current-video-offset' align='Center'/>
+          <text id='current-video-offset' font-size='2' align='Center'/>
           <button id='offset-increase-button' hover-hint='Starts Video Earlier' text='+' pad='0' on-click='on-offset-increase-action' all-uppercase='false' pref-width='5' pref-height='5'/>
         </horizontal>
         <button id='offset-magnitude-button' text='+100' on-click='on-offset-magnitude-action' preferred-height='5' font-size='3'/>
@@ -45,7 +45,7 @@
       <list id='video-list' list-width='100' visible-cells='4' select-cell='on-select-cell'/>
       <page-button click-event='video-list#PageDown' direction='Down' pref-width='30' pref-height='5'/>
     </vertical>
-    <text id='search-results-loading' active='false' text='Loading Results...' align='Center' anchor-pos-y='5'/>
+    <text id='search-results-loading' active='false' font-size='2' text='Loading Results...' align='Center' anchor-pos-y='5'/>
     <modal-keyboard id='search-keyboard' on-enter='on-query' clear-on-open='false' show-event='show-keyboard'
                     hide-event='hide-keyboard' move-to-center='true' click-off-closes='true'/>
     <bottom-button-panel pad-top='3'>
