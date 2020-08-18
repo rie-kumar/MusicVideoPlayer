@@ -184,7 +184,7 @@ namespace MusicVideoPlayer.YT
                     {
                         var trimmedLine = output;
                         YTResult ytResult = MakeYtResult(trimmedLine);
-                        Plugin.logger.Debug($"Adding: {ytResult.title}");
+                        // Plugin.logger.Debug($"Adding: {ytResult.title}");
                         searchResults.Add(ytResult);
                         if (searchResults.Count >= resultsNumber)
                         {
@@ -197,15 +197,15 @@ namespace MusicVideoPlayer.YT
                         Plugin.logger.Error(error);
                     }
                 };
-                Plugin.logger.Debug("Error Set");
+                // Plugin.logger.Debug("Error Set");
                 yield return searchProcess.Start();
                 var fifteenSeconds = new TimeSpan(15 * TimeSpan.TicksPerSecond);
                 var countdown = YouTubeDownloader.Countdown(searchProcess, fifteenSeconds);
                 SharedCoroutineStarter.instance.StartCoroutine(countdown);
-                Plugin.logger.Debug("started");
+                // Plugin.logger.Debug("started");
                 searchProcess.BeginErrorReadLine();
                 searchProcess.BeginOutputReadLine();
-                Plugin.logger.Debug("Error Reading");
+                // Plugin.logger.Debug("Error Reading");
                 // var outputs = searchProcess.StandardOutput.ReadToEnd().Split('\n');
                 yield return new WaitUntil(() => searchProcess.HasExited);
                 SharedCoroutineStarter.instance.StopCoroutine(countdown);
@@ -240,7 +240,7 @@ namespace MusicVideoPlayer.YT
                 //         Plugin.logger.Error(e);
                 //     }
                 // }
-                Plugin.logger.Debug(searchResults.Count.ToString());
+                // Plugin.logger.Debug(searchResults.Count.ToString());
             }
 
             if (callback == null || query != searchResults.query) yield break;

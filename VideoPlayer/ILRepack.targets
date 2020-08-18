@@ -4,10 +4,10 @@
     <PropertyGroup>
       <WorkingDirectory>$(OutputPath)</WorkingDirectory>
     </PropertyGroup>
-    <ItemGroup>
-      <InputAssemblies Include="HtmlAgilityPack.dll" />
-      <InputAssemblies Include="System.Text.Json.dll" />
-    </ItemGroup>
+<!--    <ItemGroup>-->
+<!--      <InputAssemblies Include="HtmlAgilityPack.dll" />-->
+<!--      <InputAssemblies Include="System.Text.Json.dll" />-->
+<!--    </ItemGroup>-->
     <ItemGroup>
       <!-- Must be a fully qualified name -->
       <!-- <DoNotInternalizeAssemblies Include="System.Threading.Tasks.Dataflow.dll" /> -->

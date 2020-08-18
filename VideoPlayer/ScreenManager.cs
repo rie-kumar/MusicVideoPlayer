@@ -137,15 +137,15 @@ namespace MusicVideoPlayer
 
         private void OnMenuSceneLoadedFresh(ScenesTransitionSetupDataSO scenesTransition)
         {
-            // if (currentVideo != null) PrepareVideo(currentVideo);
-            // PauseVideo();
+            if (currentVideo != null) PrepareVideo(currentVideo);
+            PauseVideo();
             //HideScreen();
         }
 
         private void OnMenuSceneLoaded()
         {
-            // if (currentVideo != null) PrepareVideo(currentVideo);
-            // PauseVideo();
+            if (currentVideo != null) PrepareVideo(currentVideo);
+            PauseVideo();
             //HideScreen();
         }
 
@@ -185,7 +185,7 @@ namespace MusicVideoPlayer
                 try
                 {
                     videoPlayer.Prepare();
-                    Plugin.logger.Notice("Prepared null video");
+                    // Plugin.logger.Notice("Prepared null video");
                 }
                 catch
                 {
@@ -230,13 +230,11 @@ namespace MusicVideoPlayer
             Plugin.logger.Debug("Preparing");
             yield return new WaitUntil(() =>
             {
-                Plugin.logger.Debug(
-                    $"{(videoPlayer.isPrepared ? "Prepared" : "Not Prepared")}\t{(videoPlayer.canSetTime ? "canSetTime" : "Not canSetTime")}");
+                // Plugin.logger.Debug($"{(videoPlayer.isPrepared ? "Prepared" : "Not Prepared")}\t{(videoPlayer.canSetTime ? "canSetTime" : "Not canSetTime")}");
                 return videoPlayer.isPrepared;
             });
-            Plugin.logger.Debug(
-                $"{(videoPlayer.isPrepared ? "Prepared" : "Not Prepared")}\t{(videoPlayer.canSetTime ? "canSetTime" : "Not canSetTime")}");
-            Plugin.logger.Debug("Seeking");
+            // Plugin.logger.Debug($"{(videoPlayer.isPrepared ? "Prepared" : "Not Prepared")}\t{(videoPlayer.canSetTime ? "canSetTime" : "Not canSetTime")}");
+            // Plugin.logger.Debug("Seeking");
             while (Math.Abs(videoPlayer.time - correctVideoTime) > .050 || (videoPlayer.frame - correctVideoFrame) > 2)
             {
                 yield return SeekVideoToTime(correctVideoTime);

@@ -171,18 +171,18 @@ namespace MusicVideoPlayer
             if (selectedLevel != videoData.level || videoTitleText.text == "No Video" ||
                 videoDatas.videos.IndexOf(videoData) != videoDatas.activeVideo)
             {
-                Plugin.logger.Info("Not Same Video");
+                // Plugin.logger.Info("Not Same Video");
                 return;
             }
             LoadVideoSettings(videoData, false);
         }
         public void LoadVideoSettings(VideoData videoData, bool checkForVideo = true)
         {
-            Plugin.logger.Info($"Stopping Preview");
+            // Plugin.logger.Info($"Stopping Preview");
 
             StopPreview(false);
 
-            Plugin.logger.Info($"Stopped Preview");
+            // Plugin.logger.Info($"Stopped Preview");
 
             if (videoData == null && checkForVideo && selectedLevel != null)
             {
@@ -1175,7 +1175,7 @@ namespace MusicVideoPlayer
                     // Download from video.json if only video not there
                     Plugin.logger.Debug("Re-Downloading");
                     //YouTubeDownloader.Instance.EnqueueVideo(selectedVideo);
-                    YouTubeDownloader.Instance.StartDownload(selectedVideo);
+                    YouTubeDownloader.Instance.StartDownload(selectedVideo, false);
                     //VideoLoader.Instance.AddVideo(selectedVideo);
                     break;
                 case DownloadState.Downloaded:
@@ -1309,7 +1309,7 @@ namespace MusicVideoPlayer
             ChangeView(false);
             //Queueing doesn't really work So let's just download them all simultaneously does it really matter?
             //YouTubeDownloader.Instance.EnqueueVideo(data);
-            YouTubeDownloader.Instance.StartDownload(data);
+            YouTubeDownloader.Instance.StartDownload(data, false);
             VideoLoader.Instance.AddVideo(data);
             LoadVideoSettings(data);
         }
@@ -1319,7 +1319,7 @@ namespace MusicVideoPlayer
         {
             downloadButton.interactable = false;
             VideoData data = new VideoData(id, selectedLevel);
-            YouTubeDownloader.Instance.StartDownload(data);
+            YouTubeDownloader.Instance.StartDownload(data, false);
             VideoLoader.Instance.AddVideo(data);
             LoadVideoSettings(data);
         }
