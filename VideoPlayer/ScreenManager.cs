@@ -160,14 +160,20 @@ namespace MusicVideoPlayer
             Plugin.logger.Warn("Video player error: " + message);
         }
 
+        private IEnumerator prepareVideoCoroutine;
         public void PrepareVideo(VideoData video)
         {
-            StartCoroutine(PrepareVideoCoroutine(video));
+            if(prepareVideoCoroutine != null)
+                StopCoroutine(prepareVideoCoroutine);
+            prepareVideoCoroutine = PrepareVideoCoroutine(video);
+            StartCoroutine(prepareVideoCoroutine);
         }
 
         public void PrepareVideoSync(VideoData video)
         {
-            var prepareVideoCoroutine = PrepareVideoCoroutine(video);
+            if(prepareVideoCoroutine != null)
+                StopCoroutine(prepareVideoCoroutine);
+            prepareVideoCoroutine = PrepareVideoCoroutine(video);
             while (prepareVideoCoroutine.MoveNext())
             {
             }
@@ -206,20 +212,23 @@ namespace MusicVideoPlayer
             var lockTimer = new Stopwatch();
             lockTimer.Start();
             var videoFileInfo = new FileInfo(videoPath);
+            var lockWaitTicks = 6 * TimeSpan.TicksPerSecond;
             if (videoPlayer.url != videoPath)
             {
                 yield return new WaitUntil(() =>
-                    !IsFileLocked(videoFileInfo) || lockTimer.ElapsedTicks > 12 * TimeSpan.TicksPerSecond);
+                    !IsFileLocked(videoFileInfo) || lockTimer.ElapsedTicks > lockWaitTicks);
                 yield return (videoPlayer.url = videoPath);
             }
 
             lockTimer.Stop();
-            if (lockTimer.ElapsedTicks > 12 * TimeSpan.TicksPerSecond && IsFileLocked(videoFileInfo))
+            if (lockTimer.ElapsedTicks > lockWaitTicks && IsFileLocked(videoFileInfo))
             {
-                throw new Exception("File Locked");
+                var exception = new Exception("File Locked");
+                Plugin.logger.Error(exception);
+                throw exception;
             }
-
-            offsetSec = video.offset / 1000f; // ms -> s
+            
+            yield return offsetSec = video.offset / 1000f; // ms -> s
             var correctVideoTime = video.offset >= 0 ? offsetSec : 0;
 
             var correctVideoFrame = (int) Math.Round(videoPlayer.frameRate * correctVideoTime);
@@ -233,12 +242,13 @@ namespace MusicVideoPlayer
                 // Plugin.logger.Debug($"{(videoPlayer.isPrepared ? "Prepared" : "Not Prepared")}\t{(videoPlayer.canSetTime ? "canSetTime" : "Not canSetTime")}");
                 return videoPlayer.isPrepared;
             });
+            Plugin.logger.Info("Prepared video");
             // Plugin.logger.Debug($"{(videoPlayer.isPrepared ? "Prepared" : "Not Prepared")}\t{(videoPlayer.canSetTime ? "canSetTime" : "Not canSetTime")}");
             // Plugin.logger.Debug("Seeking");
-            while (Math.Abs(videoPlayer.time - correctVideoTime) > .050 || (videoPlayer.frame - correctVideoFrame) > 2)
-            {
+            // while (Math.Abs(videoPlayer.time - correctVideoTime) > .050 || (videoPlayer.frame - correctVideoFrame) > 2)
+            // {
                 yield return SeekVideoToTime(correctVideoTime);
-            }
+            // }
 
             Plugin.logger.Info(
                 $"Times are {videoPlayer.time}:{correctVideoTime}\tFrames are {videoPlayer.frame}:{correctVideoFrame}\t{(videoPlayer.isPrepared ? "Prepared" : "Not Prepared")}\t{(videoPlayer.isPaused ? "Paused" : "Not Paused")}");

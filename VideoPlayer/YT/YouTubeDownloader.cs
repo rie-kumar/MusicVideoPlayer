@@ -330,7 +330,7 @@ namespace MusicVideoPlayer.YT
                     }
                     catch { }
                     YouTubeDownloader.externalProcesses.Remove(localDownloader);
-                    VideoMenu.instance.LoadVideoSettingsIfSameVideo(video);
+                    // Don't load video since it will be loaded (or not) after VerifyDownload
                 }; 
                 timer.Start();
                 yield return localDownloader.Start();
@@ -538,11 +538,10 @@ namespace MusicVideoPlayer.YT
         {
             yield return new WaitForSecondsRealtime(1);
 
-            if (File.Exists(VideoLoader.GetVideoPath(video, false)))
-            {
-                // video okay?
-                downloadProgress?.Invoke(video);
-            }
+            if (!File.Exists(video.FullVideoPath)) yield break;
+            // video okay?
+            downloadProgress?.Invoke(video);
+            VideoMenu.instance.LoadVideoSettingsIfSameVideo(video);
         }
         IEnumerator Countdown(VideoDownload download)
         {

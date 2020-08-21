@@ -3,23 +3,23 @@
     <vertical child-control-height='false'>
     <horizontal pad='3' preferred-width='120' horizontal-fit='PreferredSize'>
       <button id='prev-video' pref-width='7' preferred-height='5' on-click='prev-video-action' text='🢤'/>
-      <text font-size='2' id='video-title' align='Center' overflow-mode='Ellipsis' text='No Video'/>
+      <text font-size='4' id='video-title' align='Center' overflow-mode='Ellipsis' text='No Video'></text>
       <button id='next-video' pref-width='7' preferred-height='5' on-click='next-video-action' text='➩'/>
     </horizontal>
     <horizontal pad='5'>
       <vertical child-control-width='false' horizontal-fit='PreferredSize' vertical-fit='PreferredSize'>
         <vertical id='current-video-player' pref-height='15' pref-width='48' pad-left='80'/>
         <vertical pad-top='0' preferred-width='80'>
-          <text id='current-video-title' font-align='Center' font-size='4' overflow-mode='Ellipsis'/>
+          <text id='current-video-title' text="No Title" font-align='Center' font-size='3' overflow-mode='Ellipsis'></text>
         </vertical>
         <vertical preferred-width='80' preferred-height='20'>
-          <text id='current-video-description' word-wrapping='true' font-align='TopLeft' overflow-mode='Ellipsis' font-size='2'/>
+          <text id='current-video-description' text="No Description" word-wrapping='true' font-align='TopLeft' overflow-mode='Ellipsis' font-size='2'></text>
         </vertical>
       </vertical>
       <vertical vertical-fit='PreferredSize' horizontal-fit='PreferredSize' spacing='0' pad-bottom='30'>
         <horizontal pad-top='0' spacing='3' horizontal-fit='PreferredSize'>
           <button id='offset-decrease-button' hover-hint='Starts Video Later' text='-' pad='0' on-click='on-offset-decrease-action' all-uppercase='false' pref-width='5' pref-height='5'/>
-          <text id='current-video-offset' font-size='2' align='Center'/>
+          <text id='current-video-offset' text="0" font-size='4' align='Center'></text>
           <button id='offset-increase-button' hover-hint='Starts Video Earlier' text='+' pad='0' on-click='on-offset-increase-action' all-uppercase='false' pref-width='5' pref-height='5'/>
         </horizontal>
         <button id='offset-magnitude-button' text='+100' on-click='on-offset-magnitude-action' preferred-height='5' font-size='3'/>

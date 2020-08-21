@@ -28,6 +28,8 @@ using UnityEngine.Networking;
 using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
 using Image = UnityEngine.UI.Image;
+using Screen = HMUI.Screen;
+
 // ReSharper disable UnusedMember.Local
 
 namespace MusicVideoPlayer
@@ -165,17 +167,23 @@ namespace MusicVideoPlayer
 
         #region Public Methods
 
+
+        public bool isSameVideo(VideoData videoData, VideoDatas videoDatas)
+        {
+            return selectedLevel != videoData.level || videoTitleText.text == "No Video" ||
+                   videoDatas.videos.IndexOf(videoData) != videoDatas.activeVideo;
+        }
         public void LoadVideoSettingsIfSameVideo(VideoData videoData)
         {
             VideoDatas videoDatas = VideoLoader.GetVideos(videoData.level);
-            if (selectedLevel != videoData.level || videoTitleText.text == "No Video" ||
-                videoDatas.videos.IndexOf(videoData) != videoDatas.activeVideo)
+            if (isSameVideo(videoData, videoDatas))
             {
                 // Plugin.logger.Info("Not Same Video");
                 return;
             }
             LoadVideoSettings(videoData, false);
         }
+
         public void LoadVideoSettings(VideoData videoData, bool checkForVideo = true)
         {
             // Plugin.logger.Info($"Stopping Preview");
@@ -210,7 +218,7 @@ namespace MusicVideoPlayer
 
             LoadVideoDownloadState();
 
-            Plugin.logger.Debug("Has Loaded: " + selectedVideo + "Video is: " + downloadStateText.text);
+            Plugin.logger.Debug($"Has Loaded: {selectedVideo} Video is: {downloadStateText.text}");
             ScreenManager.Instance.PrepareVideo(selectedVideo);
         }
 
@@ -486,6 +494,7 @@ namespace MusicVideoPlayer
             }
 
             ChangeView(false);
+            Plugin.logger.Info($"Video {videoDatas.activeVideo} {videoDatas.Count}");
             LoadVideoSettings(videoDatas.ActiveVideo);
             Save();
         }
@@ -504,6 +513,7 @@ namespace MusicVideoPlayer
             }
 
             ChangeView(false);
+            Plugin.logger.Info($"Video {videoDatas.activeVideo} {videoDatas.Count}");
             LoadVideoSettings(videoDatas.ActiveVideo);
             Save();
         }
@@ -755,7 +765,7 @@ namespace MusicVideoPlayer
                 if(videoData == selectedVideo) downloadStateText.text = "Cutting Offset Done";
                 Plugin.logger.Info("Cutting Offset done?");
                 if (selectedVideo != videoData) return;
-                LoadVideoSettings(videoData);
+                LoadVideoSettingsIfSameVideo(videoData);
                 Plugin.logger.Info("Loaded New Video");
             };
             concatProcess.Start();
@@ -906,14 +916,6 @@ namespace MusicVideoPlayer
 
             var songAbsolutePath = Path.Combine(levelFolder,
                 customLevel.standardLevelInfoSaveData.songFilename);
-            var splitSongPath = songAbsolutePath.Split('.');
-            var mp3SongPath = "";
-            for (int i = 0; i <= splitSongPath.Length - 2; i++)
-            {
-                mp3SongPath += splitSongPath[i] + ".";
-            }
-
-            mp3SongPath += "mp3";
             var songLength = customLevel.songDuration;
             // Plugin.logger.Debug(Environment.CurrentDirectory + "\\Youtube-dl\\ffmpeg.exe" + $"-i {songAbsolutePath} {mp3SongPath}");
             // Plugin.logger.Debug(Environment.CurrentDirectory + "\\Youtube-dl\\SyncVideoWithAudio\\SyncVideoWithAudio.exe" + $"offest {songAbsolutePath} {videoAbsolutePath}");
@@ -1097,7 +1099,6 @@ namespace MusicVideoPlayer
 
         private IEnumerator GuessOffsetSucceeded(VideoData videoData)
         {
-            videoData.isGuessing = false;
             Plugin.logger.Info($"GOS->{videoData.offsetGuess}->Bs");
             Plugin.logger.Info("Finished Guess");
             try
@@ -1115,7 +1116,7 @@ namespace MusicVideoPlayer
                 GuessOffsetFailed(videoData);
                 yield break;
             }
-
+            LoadVideoSettingsIfSameVideo(videoData);
             if(videoData == selectedVideo) downloadStateText.text = "Guess Successful and " + (_needsCut ? "Needs Cut" : "No Cut");
             videoData.isGuessing = false;
             Save(videoData);
@@ -1258,6 +1259,7 @@ namespace MusicVideoPlayer
                 {
                     Plugin.logger.Info("Not Prepped yet");
                 }
+                Plugin.logger.Debug("Prepare CRT");
                 yield return ScreenManager.Instance.PrepareVideoCoroutine(selectedVideo); // Prepare Synchronously? ¯\_(ツ)_/¯
                 Plugin.logger.Debug("Done Prepping");
                 ScreenManager.Instance.PlayVideo(true);
@@ -1355,6 +1357,7 @@ namespace MusicVideoPlayer
 
         #region Youtube Downloader
 
+        // Only use full reload once at end of download
         private void VideoDownloaderDownloadProgress(VideoData video)
         {
             VideoDatas videoDatas = VideoLoader.GetVideos(video.level);
