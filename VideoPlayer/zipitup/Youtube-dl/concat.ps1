@@ -33,6 +33,3 @@ Start-Process -FilePath $FfmpegPath -ArgumentList @("-f", "concat", "-safe", "0"
 $files | ForEach-Object {Remove-Item $_}
 Write-Output "Done: `"$OutFile`""
 # Remove-Item .\concat.txt
-
-D:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\CustomLevels\_OST
-D:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\CustomSongs\_OST\POP-STARS - K-DA

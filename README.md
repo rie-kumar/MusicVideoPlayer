@@ -77,3 +77,4 @@ Requires BSUtils & BSML.
   "Count": 3
 }
 ```
+Depends on Executables from: https://github.com/b-rad15/SelectJsonFromYoutubeDL, https://github.com/b-rad15/SyncVideoWithAudio, https://youtube-dl.org/, and https://ffmpeg.org/
