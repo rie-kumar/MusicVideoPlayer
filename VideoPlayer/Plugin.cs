@@ -35,8 +35,16 @@ namespace MusicVideoPlayer
             GameplaySetup.instance.AddTab("Video", "MusicVideoPlayer.Views.video-menu.bsml", VideoMenu.instance);
             BSEvents.OnLoad();
             BSEvents.lateMenuSceneLoadedFresh += OnMenuSceneLoadedFresh;
+            // BSEvents.menuSceneLoaded += OnMenuSceneLoaded;
+            // BSEvents.menuSceneActive += OnMenuSceneLoaded;
+            // BSEvents.gameSceneLoaded += OnMenuSceneLoaded;
             Base64Sprites.ConvertToSprites();
         }
+
+        // private void OnMenuSceneLoaded()
+        // {
+        //     ScreenManager.OnLoad();
+        // }
 
         private static void OnMenuSceneLoadedFresh(ScenesTransitionSetupDataSO scenesTransition)
         {
@@ -50,6 +58,9 @@ namespace MusicVideoPlayer
         public void OnApplicationQuit()
         {
             BSEvents.lateMenuSceneLoadedFresh -= OnMenuSceneLoadedFresh;
+            // BSEvents.menuSceneLoaded -= OnMenuSceneLoaded;
+            // BSEvents.menuSceneActive -= OnMenuSceneLoaded;
+            // BSEvents.gameSceneLoaded -= OnMenuSceneLoaded;
             YouTubeDownloader.Instance.OnApplicationQuit();
         }
 

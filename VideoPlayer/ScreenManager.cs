@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using ModestTree;
+using MusicVideoPlayer.Utils;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Video;
@@ -21,7 +22,24 @@ namespace MusicVideoPlayer
 {
     public class ScreenManager : MonoBehaviour
     {
+        private static ScreenManager _instance;
+
         public static ScreenManager Instance;
+        // {
+        //     get
+        //     {
+        //         if (_instance != null)
+        //         {
+        //             return Instance;
+        //         }
+        //         else
+        //         {
+        //             ScreenManager.OnLoad();
+        //             return _instance;
+        //         }
+        //     }
+        //     set => _instance = value;
+        // }
 
         public static bool showVideo = true;
         public static bool playPreviewAudio = false;
@@ -52,7 +70,6 @@ namespace MusicVideoPlayer
         public static void OnLoad()
         {
             Plugin.logger.Debug("OnLoad: ScreenManager");
-
             if (Instance == null)
                 new GameObject("VideoManager").AddComponent<ScreenManager>();
         }
@@ -79,6 +96,9 @@ namespace MusicVideoPlayer
             DontDestroyOnLoad(gameObject);
 
             CreateScreen();
+            Plugin.logger.Info("Adding Rotate Thingy");
+            // Not set to instance of object?
+            instanceEnvironmentSpawnRotation.didRotateEvent += ChangeRotation360; // Set up event for running 360 video (will simply do nothing for regular video)
         }
 
 
@@ -128,6 +148,15 @@ namespace MusicVideoPlayer
             videoPlayer.waitForFirstFrame = true;
 
             OnMenuSceneLoaded();
+            BSEvents.levelQuit += unsetTransformParent;
+            BSEvents.levelCleared += unsetTransformParent;
+            BSEvents.levelFailed += unsetTransformParent;
+            BSEvents.levelRestarted += unsetTransformParent;
+        }
+
+        private void unsetTransformParent(StandardLevelScenesTransitionSetupDataSO slstsd, LevelCompletionResults lcr)
+        {
+            screen.transform.parent = null;
         }
 
         //private void VideoPrepared(VideoPlayer source)
@@ -298,8 +327,22 @@ namespace MusicVideoPlayer
             float practiceSettingsSongStart = 0;
             if (!preview)
             {
-                //instanceEnvironmentSpawnRotation.didRotateEvent += ChangeRotation360; // Set up event for running 360 video (will simply do nothing for regular video)
-                try // Try to get these as errors happen when only previewing (and they are unnecessary)
+                
+                Plugin.logger.Info("Adding Rotate Thingy 2");
+                // instanceEnvironmentSpawnRotation.didRotateEvent += ChangeRotation360; // Set up event for running 360 video (will simply do nothing for regular video)
+                CoreGameHUDController cgh = Resources.FindObjectsOfTypeAll<CoreGameHUDController>().FirstOrDefault(x => x.isActiveAndEnabled);
+                var screenSoftParentRotation = screen.AddComponent<SoftParent>();
+                screenSoftParentRotation.AssignParent(cgh.transform);
+                // screen.transform.parent = screenSoftParentRotation.transform;
+                // screenSoftParentRotation.AssignOffsets(cgh.transform.position - screen.transform.position, cgh.transform.rotation - screen.transform.rotation);
+                // Action<StandardLevelScenesTransitionSetupDataSO, LevelCompletionResults> levelCleanup = (so, results) =>
+                // {
+                //     instanceEnvironmentSpawnRotation.didRotateEvent -= ChangeRotation360; // unhook event for running 360 video
+                // };
+                // BSEvents.levelCleared += levelCleanup;
+                // BSEvents.levelFailed += levelCleanup;
+                // BSEvents.levelQuit += levelCleanup;
+                try // Try to get these, as errors happen when only previewing (and they are unnecessary)
                 {
                     try // Try to get these as there will be a null reference if not in practice mode or only previewing
                     {
@@ -513,6 +556,7 @@ namespace MusicVideoPlayer
         public void ChangeRotation360(Quaternion quaternion)
         {
             // Plugin.logger.Debug($"Song Time: {syncController.songTime}");
+            // screen.transform.rotation = Quaternion.Slerp(transform.rotation, quaternion, Time.deltaTime * 5.0f);
             // screen.transform.eulerAngles = new Vector3(screen.transform.eulerAngles.x, quaternion.eulerAngles.y, screen.transform.eulerAngles.z); // Set screen rotation relative to itself
             // screen.transform.position = new Vector3(quaternion.eulerAngles.y, screen.transform.position.y, screen.transform.position.z); // Set screen rotation relative to you
         }

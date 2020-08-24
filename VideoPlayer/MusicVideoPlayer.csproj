@@ -123,6 +123,7 @@
     <Compile Include="UI\MVPSettings.cs" />
     <Compile Include="UI\VideoMenu\VideoMenu.cs" />
     <Compile Include="Util\Base64Sprites.cs" />
+    <Compile Include="Util\SoftParent.cs" />
     <Compile Include="VideoQualitySetting.cs" />
     <Compile Include="VideoLoader.cs" />
     <Compile Include="Plugin.cs" />
