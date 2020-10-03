@@ -19,16 +19,17 @@ namespace MusicVideoPlayer.UI
     {
         private Config config;
 
-        [UIValue("positions")] private List<object> screenPositions = (new object[]
+        [UIValue("positions")] private List<object> screenPositions = new object[]
         {
-            VideoPlacement.Background,
+            VideoPlacement.BackgroundHigh,
+            VideoPlacement.BackgroundMid,
             VideoPlacement.BackgroundLow,
             VideoPlacement.Center,
             VideoPlacement.Left,
             VideoPlacement.Right,
             VideoPlacement.Bottom,
             VideoPlacement.Top
-        }).ToList();
+        }.ToList();
 
         [UIValue("modes")] private List<object> qualityModes = (new object[]
         {
@@ -233,9 +234,8 @@ namespace MusicVideoPlayer.UI
         public void Awake()
         {
             config = new Config("MVP");
-            placementMode = Enum.TryParse(config.GetString("Positions", "Video Placement", "Bottom"), out VideoPlacement placementParsed) ? placementParsed : VideoPlacement.Bottom;
-
-            qualityMode = Enum.TryParse(config.GetString("Modes", "Video Quality", "Best"), out VideoQuality qualityParsed) ? qualityParsed : VideoQuality.Best;
+            placementMode = Enum.TryParse(config.GetString("Positions", "Video Placement", "BackgroundMid"), out VideoPlacement placementParsed) ? placementParsed : VideoPlacement.BackgroundMid;
+            qualityMode = Enum.TryParse(config.GetString("Modes", "Video Quality", "Best"), out VideoQuality qualityParsed) ? qualityParsed : VideoQuality.High;
         }
     }
 }

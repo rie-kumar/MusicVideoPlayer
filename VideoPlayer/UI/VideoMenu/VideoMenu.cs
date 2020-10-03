@@ -61,7 +61,7 @@ namespace MusicVideoPlayer
 
         [UIComponent("preview-button")] private TextMeshProUGUI previewButtonText;
 
-        [UIComponent("delete-button")] private TextMeshProUGUI deleteButtonText;
+        // [UIComponent("delete-button")] private TextMeshProUGUI deleteButtonText;
 
         [UIComponent("delete-video-button")] private TextMeshProUGUI deleteVideoButtonText;
 
@@ -271,6 +271,7 @@ namespace MusicVideoPlayer
             if (selectedVideo == null || selectedVideo.downloadState != DownloadState.Downloaded)
             {
                 enable = false;
+                // Plugin.logger.Debug($"{selectedVideo}, {selectedVideo?.downloadState}!={DownloadState.Downloaded}");
                 //TODO: add option to download video from video.json at game boot code here, may cause lag at loading if downloading too many
             }
 
@@ -426,7 +427,6 @@ namespace MusicVideoPlayer
         {
             Plugin.logger.Info("Updating Search Results");
             List<CustomListTableData.CustomCellInfo> videoCells = new List<CustomListTableData.CustomCellInfo>();
-            Plugin.logger.Info("List Made");
 
             foreach (var result in results)
             {

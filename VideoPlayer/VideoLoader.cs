@@ -211,7 +211,6 @@ namespace MusicVideoPlayer.Util
         {
             BeatmapLevelSO[] levels = Resources.FindObjectsOfTypeAll<BeatmapLevelSO>()
                 .Where(x => x.GetType() != typeof(CustomBeatmapLevel)).ToArray();
-            Plugin.logger.Info("Getting OST Video Data");
             Action job = delegate
             {
                 try
@@ -222,13 +221,9 @@ namespace MusicVideoPlayer.Util
                         var soundData = new float[level.beatmapLevelData.audioClip.samples];
                         level.beatmapLevelData.audioClip.GetData(soundData, level.beatmapLevelData.audioClip.samples);
                         i++;
-                        var videoFileName = level.songName;
-                        // Plugin.logger.Info($"Trying for: {videoFileName}");
-                        // strip invlid characters
-                        foreach (var c in Path.GetInvalidFileNameChars())
-                        {
-                            videoFileName = videoFileName.Replace(c, '-');
-                        }
+                        // strip invlid characters wit LINQ, ooooooooohhhhhhhhhhhh
+                        var videoFileName = Path.GetInvalidFileNameChars().Aggregate(level.songName, (current, c) => current.Replace(c, '-'));
+                        
 
                         videoFileName = videoFileName.Replace('\\', '-');
                         videoFileName = videoFileName.Replace('/', '-');
@@ -239,19 +234,13 @@ namespace MusicVideoPlayer.Util
                         {
                             continue;
                         }
-                        // Plugin.logger.Info($"Using name: {videoFileName}");
-                        // Plugin.logger.Info($"At Path: {songPath}");
-                        // Plugin.logger.Info($"Exists");
                         var results = Directory.GetFiles(songPath, "video.json", SearchOption.AllDirectories);
                         if (results.Length == 0)
                         {
-                            // Plugin.logger.Info($"No video.json");
                             continue;
                         }
-                        // Plugin.logger.Info($"Found video.json");
 
                         var result = results[0];
-                        Plugin.logger.Info(result);
 
                         try
                         {
@@ -261,16 +250,13 @@ namespace MusicVideoPlayer.Util
                                 VideoDatas videos;
                                 if (_loadingCancelled) return;
                                 IPreviewBeatmapLevel previewBeatmapLevel = level.difficultyBeatmapSets[0].difficultyBeatmaps[0].level;
-                                Plugin.logger.Info($"Loading: {previewBeatmapLevel.songName}");
                                 try
                                 {
-                                    // Plugin.logger.Info($"Loading as multiple videos");
                                     videos = LoadVideos(result, previewBeatmapLevel);
                                     videos.level = previewBeatmapLevel;
                                 }
                                 catch
                                 {
-                                    // Plugin.logger.Info($"Loading as single video");
                                     var video = LoadVideo(result, previewBeatmapLevel);
                                     videos = new VideoDatas
                                     {
@@ -282,14 +268,10 @@ namespace MusicVideoPlayer.Util
                                 if (videos.videos.Count != 0)
                                 {
                                     AddLevelsVideos(videos);
-                                    foreach (var videoData in videos)
-                                    {
-                                        // Plugin.logger.Info($"Found Video: {videoData.ToString()}");
-                                    }
                                 }
                                 else
                                 {
-                                    // Plugin.logger.Info($"No Videos");
+                                    
                                 }
                             });
                         }

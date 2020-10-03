@@ -55,7 +55,7 @@ namespace MusicVideoPlayer
                 videoFileName = videoFileName.Replace('\\', '-');
                 videoFileName = videoFileName.Replace('/', '-');
 
-                return Path.Combine(Environment.CurrentDirectory, "Beat Saber_Data", "CustomSongs", "_OST", videoFileName);
+                return Path.Combine(Environment.CurrentDirectory, "Beat Saber_Data", "CustomLevels", "_OST", videoFileName);
             }
         }
 
@@ -71,6 +71,9 @@ namespace MusicVideoPlayer
         public string FullVideoPath => Path.Combine(LevelDir, videoPath);
         [JsonIgnore]
         public string FullCutVideoPath => Path.Combine(LevelDir, cutVideoPath);
+
+        [JsonIgnore]
+        public bool isLocal => !videoPath.StartsWith("http");
 
         [System.NonSerialized]
         private IPreviewBeatmapLevel _level; 
@@ -126,7 +129,14 @@ namespace MusicVideoPlayer
 
         public DownloadState UpdateDownloadState()
         {
-            return this.downloadState = File.Exists(FullVideoPath) || (this.HasBeenCut && File.Exists(FullCutVideoPath)) ? DownloadState.Downloaded : DownloadState.NotDownloaded;
+            // if (this._level.songName.Contains("POP/STARS - K/DA"))
+            // {
+            //     Plugin.logger.Debug($"Local: {isLocal}");
+            //     Plugin.logger.Debug($"Full Video Path: {FullVideoPath}");
+            //     Plugin.logger.Debug($"Been cut and has Cut Path: {this.HasBeenCut && File.Exists(FullCutVideoPath)}");
+            // }
+
+            return this.downloadState = !isLocal || File.Exists(FullVideoPath) || (this.HasBeenCut && File.Exists(FullCutVideoPath)) ? DownloadState.Downloaded : DownloadState.NotDownloaded;
         }
 
         public string UpdateLevelDir()

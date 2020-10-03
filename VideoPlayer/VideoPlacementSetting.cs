@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace MusicVideoPlayer.Util
 {
-    public enum VideoPlacement { Background, BackgroundLow, Center, Left, Right, Bottom, Top, Custom };
+    public enum VideoPlacement { BackgroundHigh, BackgroundMid, BackgroundLow, Center, Left, Right, Bottom, Top, Custom };
 
     public class VideoPlacementSetting
     {   
@@ -15,8 +15,10 @@ namespace MusicVideoPlayer.Util
         {
             switch (placement)
             {
-                case VideoPlacement.Background:
+                case VideoPlacement.BackgroundHigh:
                     return new Vector3(0, 20, 50);
+                case VideoPlacement.BackgroundMid:
+                    return new Vector3(0, 12, 50);
                 case VideoPlacement.BackgroundLow:
                     return new Vector3(0, 4.5f, 50);
                 case VideoPlacement.Center:
@@ -37,8 +39,11 @@ namespace MusicVideoPlayer.Util
             switch (placement)
             {
 
+                case VideoPlacement.BackgroundHigh:
+                    return new Vector3(-12, 0, 0);
+                case VideoPlacement.BackgroundMid:
+                    return new Vector3(-7, 0, 0);
                 case VideoPlacement.BackgroundLow:
-                case VideoPlacement.Background:
                     return new Vector3(0, 0, 0);
                 case VideoPlacement.Center:
                     return new Vector3(0, 0, 0);
@@ -58,7 +63,8 @@ namespace MusicVideoPlayer.Util
             switch (placement)
             {
                 case VideoPlacement.BackgroundLow:
-                case VideoPlacement.Background:
+                case VideoPlacement.BackgroundMid:
+                case VideoPlacement.BackgroundHigh:
                     return 30;
                 case VideoPlacement.Center:
                     return 8;
@@ -77,7 +83,8 @@ namespace MusicVideoPlayer.Util
         {
             return new float[]
             {
-                (float)VideoPlacement.Background,
+                (float)VideoPlacement.BackgroundHigh,
+                (float)VideoPlacement.BackgroundMid,
                 (float)VideoPlacement.BackgroundLow,
                 (float)VideoPlacement.Center,
                 (float)VideoPlacement.Left,
@@ -92,8 +99,10 @@ namespace MusicVideoPlayer.Util
         {
             switch (mode)
             {
-                case VideoPlacement.Background:
-                    return "Background";
+                case VideoPlacement.BackgroundHigh:
+                    return "BackgroundHigh";
+                case VideoPlacement.BackgroundMid:
+                    return "BackgroundMid";
                 case VideoPlacement.BackgroundLow:
                     return "Background Low";
                 case VideoPlacement.Center:

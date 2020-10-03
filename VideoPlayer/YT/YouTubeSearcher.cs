@@ -122,9 +122,15 @@ namespace MusicVideoPlayer.YT
                 {
                     StartInfo =
                     {
+                        // #define USEYTDLHELPER
+#if USEYTDLHELPER
                         FileName = Environment.CurrentDirectory + "/Youtube-dl/SelectJsonFromYoutubeDL.exe",
                         Arguments =
                             $"\"{Environment.CurrentDirectory + "/Youtube-dl/youtube-dl.exe"}\" \"{query}\" {resultsNumber}",
+#else
+                        FileName = Environment.CurrentDirectory + "/Youtube-dl/youtube-dl.exe",
+                        Arguments = $"\"ytsearch{resultsNumber}:{query}\" -j -i",
+#endif
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
                         UseShellExecute = false,
@@ -179,7 +185,6 @@ namespace MusicVideoPlayer.YT
                         Plugin.logger.Debug($"Running with {output}");
                         return;
                     }
-
                     try
                     {
                         var trimmedLine = output;
@@ -195,6 +200,36 @@ namespace MusicVideoPlayer.YT
                     {
                         Plugin.logger.Debug($"Invalid Response: {output}");
                         Plugin.logger.Error(error);
+                    }
+                };
+                searchProcess.Exited += (sender, e) =>
+                {
+                    searchResults.isDone = true;
+                    if(searchResults.Count != resultsNumber)
+                        Plugin.logger.Warn($"Failed on {resultsNumber-searchResults.Count} queries");
+                    try
+                    {
+                        searchProcess.Kill();
+                    }
+                    catch (Exception)
+                    {
+                        // ignored
+                    }
+                    try
+                    {
+                        searchProcess.Close();
+                    }
+                    catch (Exception)
+                    {
+                        // ignored
+                    }
+                    try
+                    {
+                        searchProcess.Dispose();
+                    }
+                    catch (Exception)
+                    {
+                        // ignored
                     }
                 };
                 // Plugin.logger.Debug("Error Set");
@@ -242,11 +277,10 @@ namespace MusicVideoPlayer.YT
                 // }
                 // Plugin.logger.Debug(searchResults.Count.ToString());
             }
-
             if (callback == null || query != searchResults.query) yield break;
             Plugin.logger.Debug($"Invoking Callback");
             callback?.Invoke();
-            yield return new WaitUntil((() => searchResults.Count >= MaxResults));
+            yield return new WaitUntil((() =>  searchResults.isDone || searchResults.Count >= MaxResults));
             callback?.Invoke();
             searchInProgress = false;
         }
@@ -533,7 +567,7 @@ namespace MusicVideoPlayer.YT
 
         public new string ToString()
         {
-            return $"{title} by {author} [{duration}] \n {URL} \n {description} \n {thumbnailURL}";
+            return $"{title} by {author} [{duration}]\t\n{URL}\t\n{description.Split('\n')[0].Substring(0,128)}\t\n{thumbnailURL}";
         }
     }
 }

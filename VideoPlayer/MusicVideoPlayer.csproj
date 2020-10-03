@@ -163,7 +163,6 @@ mkdir "$(ProjectDir)zipitup\Plugins"
 mkdir "$(ProjectDir)zipitup\(Optional) Third Person Camera Files\"
 mkdir "$(ProjectDir)zipitup\Youtube-dl\SyncVideoWithAudio\"
 rem PING -n 5 127.0.0.1&gt;nul
-xcopy /Y /F "C:\Users\brado\OneDrive\Programs\C#\SelectJsonFromYoutubeDL\bin\Release\netcoreapp3.1\publish\SelectJsonFromYoutubeDL.exe" "$(ProjectDir)zipitup\Youtube-dl\"
 xcopy /Y /S /C /I "C:\Users\brado\OneDrive\Programs\C#\SyncVideoWithAudio\bin\Release" "$(ProjectDir)zipitup\Youtube-dl\SyncVideoWithAudio\"
 xcopy /Y /F "C:\Users\brado\OneDrive\Programs\C#\SyncVideoWithAudio\concat.ps1" "$(ProjectDir)zipitup\Youtube-dl\"
 xcopy /Y "$(ProjectDir)YT\youtube-dl.exe" "$(ProjectDir)zipitup\Youtube-dl\"

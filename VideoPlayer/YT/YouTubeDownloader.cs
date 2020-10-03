@@ -268,7 +268,7 @@ namespace MusicVideoPlayer.YT
                 Process localDownloader = MakeYoutubeProcessAndReturnIt(video);
 
                 Plugin.logger.Info(
-                    $"yt command: {localDownloader.StartInfo.FileName} {localDownloader.StartInfo.Arguments}");
+                    $"yt command: \"{localDownloader.StartInfo.FileName}\" {localDownloader.StartInfo.Arguments}");
 
                 var countdown = Countdown(localDownloader, new TimeSpan(0, 1, 0));
                 // var outputCount = 0;
@@ -396,7 +396,7 @@ namespace MusicVideoPlayer.YT
 
             ydl = MakeYoutubeProcessAndReturnIt(video);
 
-            Plugin.logger.Info($"yt command: {ydl.StartInfo.FileName} {ydl.StartInfo.Arguments}");
+            Plugin.logger.Info($"yt command: \"{ydl.StartInfo.FileName}\" {ydl.StartInfo.Arguments}");
 
             ydl.Start();
 
@@ -588,12 +588,24 @@ namespace MusicVideoPlayer.YT
 
         private void UpdateYDL()
         {
+            try
+            {
+                if (File.Exists($"{Environment.CurrentDirectory}/Youtube-dl/youtube-dl.exe.new"))
+                {
+                    File.Copy($"{Environment.CurrentDirectory}/Youtube-dl/youtube-dl.exe.new", $"{Environment.CurrentDirectory}/Youtube-dl/youtube-dl.exe", true); 
+                    Plugin.logger.Debug("Forced youtube-dl overwrite");
+                }
+            }
+            catch (Exception e)
+            {
+                Plugin.logger.Error(e);
+            }
             ydl = new Process
             {
                 StartInfo =
                 {
-                    FileName = "cmd.exe",
-                    Arguments = $" /C \"{Environment.CurrentDirectory}/Youtube-dl/youtube-dl.exe\" -U",
+                    FileName = $"{Environment.CurrentDirectory}/Youtube-dl/youtube-dl.exe",
+                    Arguments = "-U",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
@@ -632,6 +644,16 @@ namespace MusicVideoPlayer.YT
                 catch
                 {
                     // ignored
+                }
+                try
+                {
+                    if (!File.Exists($"{Environment.CurrentDirectory}/Youtube-dl/youtube-dl.exe.new")) return;
+                    File.Copy($"{Environment.CurrentDirectory}/Youtube-dl/youtube-dl.exe.new", $"{Environment.CurrentDirectory}/Youtube-dl/youtube-dl.exe", true); 
+                    Plugin.logger.Debug("Forced youtube-dl overwrite");
+                }
+                catch (Exception exception)
+                {
+                    Plugin.logger.Error(exception);
                 }
             };
         }

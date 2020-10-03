@@ -22,7 +22,8 @@ namespace MusicVideoPlayer
 {
     public class ScreenManager : MonoBehaviour
     {
-        private static ScreenManager _instance;
+        // I don't care enough to use this and be safe
+        // private static ScreenManager _instance;
 
         public static ScreenManager Instance;
         // {
@@ -97,8 +98,6 @@ namespace MusicVideoPlayer
 
             CreateScreen();
             Plugin.logger.Info("Adding Rotate Thingy");
-            // Not set to instance of object?
-            instanceEnvironmentSpawnRotation.didRotateEvent += ChangeRotation360; // Set up event for running 360 video (will simply do nothing for regular video)
         }
 
 
@@ -230,57 +229,94 @@ namespace MusicVideoPlayer
                 yield break;
             }
 
-            if (video.downloadState != DownloadState.Downloaded) yield break;
-            videoPlayer.isLooping = video.loop;
-
-            Plugin.logger.Info($"Video has been cut: {video.HasBeenCut}");
-            string videoPath;
-            yield return (videoPath = video.CorrectVideoPath); // VideoLoader.GetVideoPath(video, video.HasBeenCut));
-            Plugin.logger.Info($"Loading video: {videoPath}");
+            videoPlayer.source = UnityEngine.Video.VideoSource.Url;
             videoPlayer.Pause();
-            var lockTimer = new Stopwatch();
-            lockTimer.Start();
-            var videoFileInfo = new FileInfo(videoPath);
-            var lockWaitTicks = 6 * TimeSpan.TicksPerSecond;
-            if (videoPlayer.url != videoPath)
+            if (video.isLocal)
             {
+                Plugin.logger.Info($"Video is Local file");
+                if (video.downloadState != DownloadState.Downloaded) yield break;
+                videoPlayer.isLooping = video.loop;
+
+                Plugin.logger.Info($"Video has been cut: {video.HasBeenCut}");
+                string videoPath;
+                yield return
+                    (videoPath = video.CorrectVideoPath); // VideoLoader.GetVideoPath(video, video.HasBeenCut));
+                Plugin.logger.Info($"Loading video: {videoPath}");
+                videoPlayer.Pause();
+                var lockTimer = new Stopwatch();
+                lockTimer.Start();
+                var videoFileInfo = new FileInfo(videoPath);
+                var lockWaitTicks = 6 * TimeSpan.TicksPerSecond;
+                if (videoPlayer.url != videoPath)
+                {
+                    yield return new WaitUntil(() =>
+                        !IsFileLocked(videoFileInfo) || lockTimer.ElapsedTicks > lockWaitTicks);
+                    yield return (videoPlayer.url = videoPath);
+                }
+
+                lockTimer.Stop();
+                if (lockTimer.ElapsedTicks > lockWaitTicks && IsFileLocked(videoFileInfo))
+                {
+                    var exception = new Exception("File Locked");
+                    Plugin.logger.Error(exception);
+                    throw exception;
+                }
+
+                yield return offsetSec = video.offset / 1000f; // ms -> s
+                var correctVideoTime = video.offset >= 0 ? offsetSec : 0;
+
+                var correctVideoFrame = (int) Math.Round(videoPlayer.frameRate * correctVideoTime);
+                yield return (vsRenderer.material.color = Color.clear);
+                videoPlayer.Prepare();
+                // videoPlayerOnprepareCompleted = source => SeekVideoToTime(correctVideoTime);
+                // videoPlayer.prepareCompleted += videoPlayerOnprepareCompleted;
+                Plugin.logger.Debug("Preparing");
                 yield return new WaitUntil(() =>
-                    !IsFileLocked(videoFileInfo) || lockTimer.ElapsedTicks > lockWaitTicks);
-                yield return (videoPlayer.url = videoPath);
-            }
-
-            lockTimer.Stop();
-            if (lockTimer.ElapsedTicks > lockWaitTicks && IsFileLocked(videoFileInfo))
-            {
-                var exception = new Exception("File Locked");
-                Plugin.logger.Error(exception);
-                throw exception;
-            }
-            
-            yield return offsetSec = video.offset / 1000f; // ms -> s
-            var correctVideoTime = video.offset >= 0 ? offsetSec : 0;
-
-            var correctVideoFrame = (int) Math.Round(videoPlayer.frameRate * correctVideoTime);
-            yield return (vsRenderer.material.color = Color.clear);
-            videoPlayer.Prepare();
-            // videoPlayerOnprepareCompleted = source => SeekVideoToTime(correctVideoTime);
-            // videoPlayer.prepareCompleted += videoPlayerOnprepareCompleted;
-            Plugin.logger.Debug("Preparing");
-            yield return new WaitUntil(() =>
-            {
+                {
+                    // Plugin.logger.Debug($"{(videoPlayer.isPrepared ? "Prepared" : "Not Prepared")}\t{(videoPlayer.canSetTime ? "canSetTime" : "Not canSetTime")}");
+                    return videoPlayer.isPrepared;
+                });
+                Plugin.logger.Info("Prepared video");
                 // Plugin.logger.Debug($"{(videoPlayer.isPrepared ? "Prepared" : "Not Prepared")}\t{(videoPlayer.canSetTime ? "canSetTime" : "Not canSetTime")}");
-                return videoPlayer.isPrepared;
-            });
-            Plugin.logger.Info("Prepared video");
-            // Plugin.logger.Debug($"{(videoPlayer.isPrepared ? "Prepared" : "Not Prepared")}\t{(videoPlayer.canSetTime ? "canSetTime" : "Not canSetTime")}");
-            // Plugin.logger.Debug("Seeking");
-            // while (Math.Abs(videoPlayer.time - correctVideoTime) > .050 || (videoPlayer.frame - correctVideoFrame) > 2)
-            // {
+                // Plugin.logger.Debug("Seeking");
+                // while (Math.Abs(videoPlayer.time - correctVideoTime) > .050 || (videoPlayer.frame - correctVideoFrame) > 2)
+                // {
                 yield return SeekVideoToTime(correctVideoTime);
-            // }
+                // }
 
-            Plugin.logger.Info(
-                $"Times are {videoPlayer.time}:{correctVideoTime}\tFrames are {videoPlayer.frame}:{correctVideoFrame}\t{(videoPlayer.isPrepared ? "Prepared" : "Not Prepared")}\t{(videoPlayer.isPaused ? "Paused" : "Not Paused")}");
+                Plugin.logger.Info(
+                    $"Times are {videoPlayer.time}:{correctVideoTime}\tFrames are {videoPlayer.frame}:{correctVideoFrame}\t{(videoPlayer.isPrepared ? "Prepared" : "Not Prepared")}\t{(videoPlayer.isPaused ? "Paused" : "Not Paused")}");
+            }
+            else
+            {
+                Plugin.logger.Info($"Video is located at {video.videoPath}");
+                videoPlayer.url = video.videoPath; // set url to the non-local path
+                yield return offsetSec = video.offset / 1000f; // ms -> s
+                var correctVideoTime = video.offset >= 0 ? offsetSec : 0;
+
+                var correctVideoFrame = (int)Math.Round(videoPlayer.frameRate * correctVideoTime);
+                yield return (vsRenderer.material.color = Color.clear);
+                videoPlayer.Prepare();
+                // videoPlayerOnprepareCompleted = source => SeekVideoToTime(correctVideoTime);
+                // videoPlayer.prepareCompleted += videoPlayerOnprepareCompleted;
+                Plugin.logger.Debug("Preparing");
+                yield return new WaitUntil(() =>
+                {
+                    // Plugin.logger.Debug($"{(videoPlayer.isPrepared ? "Prepared" : "Not Prepared")}\t{(videoPlayer.canSetTime ? "canSetTime" : "Not canSetTime")}");
+                    return videoPlayer.isPrepared;
+                });
+                Plugin.logger.Info("Prepared video");
+                // Plugin.logger.Debug($"{(videoPlayer.isPrepared ? "Prepared" : "Not Prepared")}\t{(videoPlayer.canSetTime ? "canSetTime" : "Not canSetTime")}");
+                // Plugin.logger.Debug("Seeking");
+                // while (Math.Abs(videoPlayer.time - correctVideoTime) > .050 || (videoPlayer.frame - correctVideoFrame) > 2)
+                // {
+                yield return SeekVideoToTime(correctVideoTime);
+                // }
+
+                Plugin.logger.Info(
+                    $"Times are {videoPlayer.time}:{correctVideoTime}\tFrames are {videoPlayer.frame}:{correctVideoFrame}\t{(videoPlayer.isPrepared ? "Prepared" : "Not Prepared")}\t{(videoPlayer.isPaused ? "Paused" : "Not Paused")}");
+
+            }
         }
 
         private IEnumerator SeekVideoToTime(float correctVideoTime)
@@ -327,21 +363,10 @@ namespace MusicVideoPlayer
             float practiceSettingsSongStart = 0;
             if (!preview)
             {
-                
-                Plugin.logger.Info("Adding Rotate Thingy 2");
-                // instanceEnvironmentSpawnRotation.didRotateEvent += ChangeRotation360; // Set up event for running 360 video (will simply do nothing for regular video)
+                Plugin.logger.Info("Adding Soft Parent");
                 CoreGameHUDController cgh = Resources.FindObjectsOfTypeAll<CoreGameHUDController>().FirstOrDefault(x => x.isActiveAndEnabled);
                 var screenSoftParentRotation = screen.AddComponent<SoftParent>();
                 screenSoftParentRotation.AssignParent(cgh.transform);
-                // screen.transform.parent = screenSoftParentRotation.transform;
-                // screenSoftParentRotation.AssignOffsets(cgh.transform.position - screen.transform.position, cgh.transform.rotation - screen.transform.rotation);
-                // Action<StandardLevelScenesTransitionSetupDataSO, LevelCompletionResults> levelCleanup = (so, results) =>
-                // {
-                //     instanceEnvironmentSpawnRotation.didRotateEvent -= ChangeRotation360; // unhook event for running 360 video
-                // };
-                // BSEvents.levelCleared += levelCleanup;
-                // BSEvents.levelFailed += levelCleanup;
-                // BSEvents.levelQuit += levelCleanup;
                 try // Try to get these, as errors happen when only previewing (and they are unnecessary)
                 {
                     try // Try to get these as there will be a null reference if not in practice mode or only previewing
@@ -452,9 +477,6 @@ namespace MusicVideoPlayer
         private IEnumerator StartVideoDelayed(float startTime, bool preview)
         {
             // Wait
-            float timeElapsed = 0;
-            Plugin.logger.Debug(videoPlayer.time.ToString());
-
             if (preview)
             {
                 if (startTime >= 0)
@@ -464,11 +486,6 @@ namespace MusicVideoPlayer
                     videoPlayer.frame = 0;
                     var startTicks = startTime * TimeSpan.TicksPerSecond;
                     yield return new WaitUntil(() => startStopwatch.ElapsedTicks >= startTicks);
-                    // while (timeElapsed < startTime)
-                    // {
-                    //     timeElapsed += Time.deltaTime;
-                    //     yield return null;
-                    // }
                 }
             }
             else

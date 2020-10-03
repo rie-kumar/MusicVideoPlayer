@@ -2,10 +2,10 @@
   "$schema": "https://github.com/nike4613/BSIPA-MetadataFileSchema/master/Schema.json",
   "author": "Rolo, B_Rad15, rie-kumar",
   "description": "Music Video Player is a mod that allows players to download and have a video play in sync with the music during a beat saber level (i.e. the songs music video, a dance video of for the song)",
-  "gameVersion": "1.11.0",
+  "gameVersion": "1.11.1",
   "id": "Music Video Player",
   "name": "Music Video Player",
-  "version": "1.11.0",
+  "version": "1.11.2",
   "features": [
 
   ],
