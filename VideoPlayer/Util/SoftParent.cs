@@ -26,14 +26,16 @@ namespace MusicVideoPlayer.Utils
 
         private void Update()
         {
-            if (parent is null) return;
-            transform.SetPositionAndRotation(parent.position, parent.rotation);
-            Vector3 side = parent.right * posOffset.x;
-            Vector3 forward = parent.forward * posOffset.z;
-            Vector3 total = side + forward;
-            total = new Vector3(total.x, posOffset.y, total.z);
-            transform.position -= total;
-            transform.rotation *= Quaternion.Inverse(rotOffset);
+            try
+            {
+                transform.SetPositionAndRotation(parent.position, parent.rotation);
+                Vector3 side = parent.right * posOffset.x;
+                Vector3 forward = parent.forward * posOffset.z;
+                Vector3 total = side + forward;
+                total = new Vector3(total.x, posOffset.y, total.z);
+                transform.position -= total;
+                transform.rotation *= Quaternion.Inverse(rotOffset);
+            } catch(NullReferenceException) { }
         }
 
         public void AssignParent(Transform newParent)

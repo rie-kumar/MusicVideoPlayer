@@ -150,7 +150,11 @@ namespace MusicVideoPlayer.YT
                     if (searchResults.query != query)
                     {
                         Plugin.logger.Debug("Killing Search Process");
-                        searchProcess.Kill();
+                        try
+                        {
+                            searchProcess.Kill();
+                        } catch { }
+
                         return;
                     }
                     if (e.Data == null)
@@ -166,7 +170,10 @@ namespace MusicVideoPlayer.YT
                     if (searchResults.query != query)
                     {
                         Plugin.logger.Debug("Killing Search Process");
-                        searchProcess.Kill();
+                        try
+                        {
+                            searchProcess.Kill();
+                        } catch { }
                         return;
                     }
 
@@ -193,7 +200,10 @@ namespace MusicVideoPlayer.YT
                         searchResults.Add(ytResult);
                         if (searchResults.Count >= resultsNumber)
                         {
-                            ((Process) sender).Kill();
+                            try
+                            {
+                                ((Process) sender).Kill();
+                            } catch {}
                         }
                     }
                     catch (Exception error)
@@ -206,31 +216,15 @@ namespace MusicVideoPlayer.YT
                 {
                     searchResults.isDone = true;
                     if(searchResults.Count != resultsNumber)
-                        Plugin.logger.Warn($"Failed on {resultsNumber-searchResults.Count} queries");
+                        Plugin.logger.Warn($"Failed on {resultsNumber-searchResults.Count} queries with exitcode {((Process) sender).ExitCode}");
                     try
                     {
                         searchProcess.Kill();
-                    }
-                    catch (Exception)
-                    {
-                        // ignored
-                    }
-                    try
-                    {
-                        searchProcess.Close();
-                    }
-                    catch (Exception)
-                    {
-                        // ignored
-                    }
+                    } catch { }
                     try
                     {
                         searchProcess.Dispose();
-                    }
-                    catch (Exception)
-                    {
-                        // ignored
-                    }
+                    } catch { }
                 };
                 // Plugin.logger.Debug("Error Set");
                 yield return searchProcess.Start();
@@ -242,7 +236,8 @@ namespace MusicVideoPlayer.YT
                 searchProcess.BeginOutputReadLine();
                 // Plugin.logger.Debug("Error Reading");
                 // var outputs = searchProcess.StandardOutput.ReadToEnd().Split('\n');
-                yield return new WaitUntil(() => searchProcess.HasExited);
+                yield return new WaitUntil(() =>
+                { try { return searchProcess.HasExited; } catch { return true; }});
                 SharedCoroutineStarter.instance.StopCoroutine(countdown);
                 if(searchResults.query != query)
                     yield break;
@@ -345,7 +340,7 @@ namespace MusicVideoPlayer.YT
             // Plugin.logger.Debug("Output Reading");
             searchProcess.BeginErrorReadLine();
             Plugin.logger.Debug("Error Reading");
-            yield return new WaitUntil(() => searchProcess.HasExited);
+            yield return new WaitUntil(() => { try { return searchProcess.HasExited; } catch { return true; }});
             // string[] outputs = searchProcess.StandardOutput.ReadToEnd().Split('\n');
             // foreach (var output in outputs)
             // {
@@ -567,7 +562,8 @@ namespace MusicVideoPlayer.YT
 
         public new string ToString()
         {
-            return $"{title} by {author} [{duration}]\t\n{URL}\t\n{description.Split('\n')[0].Substring(0,128)}\t\n{thumbnailURL}";
+            string s = description.Split('\n')[0];
+            return $"{title} by {author} [{duration}]\t\n{URL}\t\n{(s.Length < 128 ? s : s.Substring(0, 128))}\t\n{thumbnailURL}";
         }
     }
 }

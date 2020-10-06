@@ -615,7 +615,7 @@ namespace MusicVideoPlayer
 
             // offsetProcess.PriorityBoostEnabled = true;
             Plugin.logger.Debug(cutProcess.HasExited.ToString());
-            yield return new WaitUntil(() => cutProcess.HasExited == true);
+            yield return new WaitUntil(() => { try { return cutProcess.HasExited; } catch { return true; }});
             Plugin.logger.Info("Disposing");
             try
             {
@@ -661,6 +661,7 @@ namespace MusicVideoPlayer
                 yield return StartCoroutine(OnGuessOffsetAction(videoData));
                 // Wait until GuessSucceeded or GuessFailed is done
                 yield return new WaitUntil(() => !videoData.isGuessing);
+                if (!videoData.needsCut) yield break;
             }
 
             if(videoData == selectedVideo) downloadStateText.text = "Cutting Song";
@@ -739,15 +740,10 @@ namespace MusicVideoPlayer
                     if(videoData == selectedVideo) downloadStateText.text = "Ffmpeg Concat Process failed";
                     return;
                 }
-
                 try
                 {
                     concatProcess?.Dispose();
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                }
+                } catch { }
                 concatFiles.Add("concat.txt");
                 foreach (var concatFile in concatFiles)
                 {
@@ -1061,14 +1057,9 @@ namespace MusicVideoPlayer
                     // Plugin.logger.Info("Done Wait");
                     // Plugin.logger.Info(restOfOutputTask.Result);
                     Plugin.logger.Info("Disposing");
-                    try
-                    {
+                    try {
                         offsetProcess?.Dispose();
-                    }
-                    catch
-                    {
-                    }
-
+                    } catch { }
                     StartCoroutine(GuessOffsetSucceeded(videoData));
                 };
                 offsetProcess.Start();
@@ -1390,6 +1381,8 @@ namespace MusicVideoPlayer
         private void GameSceneLoaded()
         {
             StopAllCoroutines();
+            if(false)
+                ScreenManager.Instance.PrepareVideo(null);
             ScreenManager.Instance.TryPlayVideo();
         }
 

@@ -48,6 +48,16 @@ namespace MusicVideoPlayer.UI
                 ScreenManager.showVideo = value;
                 config.SetBool("General", "Show Video", value);
             }
+        }        
+        [UIValue("rotate-360")]
+        public bool RotateIn360
+        {
+            get => config.GetBool("General", "Rotate in 360", true);
+            set
+            {
+                ScreenManager.rotateIn360 = value;
+                config.SetBool("General", "Rotate in 360", value);
+            }
         }
 
         [UIValue("play-preview-audio")]

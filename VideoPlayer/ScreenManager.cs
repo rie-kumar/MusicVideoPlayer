@@ -43,6 +43,7 @@ namespace MusicVideoPlayer
         // }
 
         public static bool showVideo = true;
+        public static bool rotateIn360 = true;
         public static bool playPreviewAudio = false;
         public VideoPlacement placement;
 
@@ -55,6 +56,7 @@ namespace MusicVideoPlayer
         public VideoPlayer videoPlayer;
         private AudioTimeSyncController syncController;
         private float offsetSec = 0f;
+        private bool hasVideo => currentVideo == null || currentVideo.downloadState != DownloadState.Downloaded;
 
         private EnvironmentSpawnRotation _envSpawnRot;
 
@@ -86,6 +88,7 @@ namespace MusicVideoPlayer
             Instance = this;
 
             showVideo = MVPSettings.instance.ShowVideoSettings;
+            rotateIn360 = MVPSettings.instance.RotateIn360;
             playPreviewAudio = MVPSettings.instance.PlayPreviewAudio;
             placement = MVPSettings.instance.PlacementMode;
 
@@ -134,6 +137,7 @@ namespace MusicVideoPlayer
             screen.transform.position = VideoPlacementSetting.Position(placement);
             screen.transform.eulerAngles = VideoPlacementSetting.Rotation(placement);
             screen.transform.localScale = VideoPlacementSetting.Scale(placement) * Vector3.one;
+            screenSoftParentRotation = screen.AddComponent<SoftParent>();
 
             videoPlayer = gameObject.AddComponent<VideoPlayer>();
             videoPlayer.isLooping = true;
@@ -348,11 +352,10 @@ namespace MusicVideoPlayer
             return false;
         }
 
+        private SoftParent screenSoftParentRotation;
         public void PlayVideo(bool preview)
         {
-            if (currentVideo == null || currentVideo.downloadState != DownloadState.Downloaded ||
-                (!showVideo && !preview)
-            ) //If the current video is null or not downloaded or show video is off AND it isn't a preview hide the screen
+            if (hasVideo || (!showVideo && !preview)) //If the current video is null or not downloaded or show video is off AND it isn't a preview hide the screen
             {
                 HideScreen();
                 return;
@@ -363,10 +366,13 @@ namespace MusicVideoPlayer
             float practiceSettingsSongStart = 0;
             if (!preview)
             {
-                Plugin.logger.Info("Adding Soft Parent");
-                CoreGameHUDController cgh = Resources.FindObjectsOfTypeAll<CoreGameHUDController>().FirstOrDefault(x => x.isActiveAndEnabled);
-                var screenSoftParentRotation = screen.AddComponent<SoftParent>();
-                screenSoftParentRotation.AssignParent(cgh.transform);
+                if (rotateIn360)
+                {
+                    CoreGameHUDController cgh = Resources.FindObjectsOfTypeAll<CoreGameHUDController>()
+                        .FirstOrDefault(x => x.isActiveAndEnabled);
+                    screenSoftParentRotation.AssignParent(cgh.transform);
+                }
+
                 try // Try to get these, as errors happen when only previewing (and they are unnecessary)
                 {
                     try // Try to get these as there will be a null reference if not in practice mode or only previewing
@@ -501,13 +507,13 @@ namespace MusicVideoPlayer
         public void PauseVideo()
         {
             StopAllCoroutines();
-            if (videoPlayer == null) return;
+            if (hasVideo) return;
             if (videoPlayer.isPlaying) videoPlayer.Pause();
         }
 
         public void ResumeVideo()
         {
-            if (videoPlayer == null) return;
+            if (hasVideo) return;
             if (!videoPlayer.isPlaying) videoPlayer.Play();
         }
 
@@ -543,6 +549,7 @@ namespace MusicVideoPlayer
         {
             this.placement = placement;
             if (Instance.screen == null) return;
+             // screen.GetComponent<SoftParent>() != 
             screen.transform.position = VideoPlacementSetting.Position(placement);
             screen.transform.eulerAngles = VideoPlacementSetting.Rotation(placement);
             screen.transform.localScale = VideoPlacementSetting.Scale(placement) * Vector3.one;
