@@ -52,8 +52,6 @@ namespace MusicVideoPlayer
 
         [UIComponent("video-title")] private TextMeshProUGUI videoTitleText;
 
-        [UIComponent("current-video-title")] private TextMeshProUGUI currentVideoTitleText;
-
         [UIComponent("current-video-description")]
         private TextMeshProUGUI currentVideoDescriptionText;
 
@@ -117,8 +115,8 @@ namespace MusicVideoPlayer
         [UIParams] private BSMLParserParams parserParams;
 
         private Vector3 videoPlayerDetailScale = new Vector3(0.57f, 0.57f, 1f);
-
-        private Vector3 videoPlayerDetailPosition = new Vector3(-2.35f, 1.5f, 1.3f);
+        private Vector3 videoPlayerDetailPosition = new Vector3(-2.35f, 1.22f, 1.0f);
+        private Vector3 videoPlayerDetailRotation = new Vector3(0f, 295f, 0f);
 
         private VideoData selectedVideo;
 
@@ -203,9 +201,7 @@ namespace MusicVideoPlayer
             if (videoData != null)
             {
                 Plugin.logger.Info($"Loading: {videoData?.title} for level: {selectedLevel?.songName}");
-                videoTitleText.text = selectedVideo.title;
-                currentVideoTitleText.text =
-                    $"[{selectedVideo.duration}] {selectedVideo.title} by {selectedVideo.author}";
+                videoTitleText.text = $"[{selectedVideo.duration}] {selectedVideo.title}";
                 currentVideoDescriptionText.text = selectedVideo.description;
                 currentVideoOffsetText.text = selectedVideo.offset.ToString();
                 EnableButtons(true);
@@ -225,7 +221,6 @@ namespace MusicVideoPlayer
         public void ClearSettings()
         {
             videoTitleText.text = "No Video";
-            currentVideoTitleText.text = "NO VIDEO SET";
             currentVideoDescriptionText.text = "";
             currentVideoOffsetText.text = "N/A";
             EnableButtons(false);
@@ -246,7 +241,6 @@ namespace MusicVideoPlayer
             selectedVideo = null;
 
             videoTitleText.text = "No Video";
-            currentVideoTitleText.text = "NO VIDEO SET";
             currentVideoDescriptionText.text = "";
             currentVideoOffsetText.text = "N/A";
             EnableButtons(false);
@@ -314,7 +308,7 @@ namespace MusicVideoPlayer
                 {
                     ScreenManager.Instance.SetScale(videoPlayerDetailScale);
                     ScreenManager.Instance.SetPosition(videoPlayerDetailPosition);
-                    ScreenManager.Instance.SetRotation(videoDetailsViewRect.transform.eulerAngles);
+                    ScreenManager.Instance.SetRotation(videoPlayerDetailRotation);
                 }
 
                 LoadVideoSettings(selectedVideo);
@@ -438,7 +432,11 @@ namespace MusicVideoPlayer
                 if (request.isNetworkError || request.isHttpError)
                     Plugin.logger.Debug(request.error);
                 else
-                    item.icon = ((DownloadHandlerTexture) request.downloadHandler).texture;
+                {
+                    var tex = ((DownloadHandlerTexture) request.downloadHandler).texture;
+                    item.icon = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), Vector2.one * 0.5f, 100, 1);
+                }
+
                 videoCells.Add(item);
             }
 
@@ -1390,7 +1388,7 @@ namespace MusicVideoPlayer
 
         #region Events
 
-        private void MissionSelectionDidActivate(bool firstActivation, ViewController.ActivationType activationType)
+        private void MissionSelectionDidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             selectedVideo = null;
             selectedLevel = null;
