@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,7 +23,7 @@ namespace MusicVideoPlayer.Util
         public bool DictionaryBeingUsed { get; private set; }
 
         //public static Dictionary<IPreviewBeatmapLevel, VideoData> videos { get; private set; }
-        public static Dictionary<IPreviewBeatmapLevel, VideoDatas> levelsVideos { get; private set; }
+        public static ConcurrentDictionary<IPreviewBeatmapLevel, VideoDatas> levelsVideos { get; private set; }
 
 
         private HMTask _loadingTask;
@@ -114,7 +115,7 @@ namespace MusicVideoPlayer.Util
                     videos = new List<VideoData> {video},
                     level = video.level
                 };
-                levelsVideos.Add(level, thisLevelsVideos);
+                levelsVideos.TryAdd(level, thisLevelsVideos);
             }
             else
             {
@@ -130,7 +131,7 @@ namespace MusicVideoPlayer.Util
 
         public void AddLevelsVideos(VideoDatas videos, IPreviewBeatmapLevel level)
         {
-            levelsVideos.Add(level, videos);
+            levelsVideos.TryAdd(level, videos);
         }
 
         public static bool RemoveVideo(VideoData video)
@@ -144,7 +145,7 @@ namespace MusicVideoPlayer.Util
                     thisLevelsVideos.videos.Remove(video);
                     if (thisLevelsVideos.Count == 0)
                     {
-                        levelsVideos.Remove(video.level);
+                        levelsVideos.TryRemove(video.level, out _);
                         return true;
                     }
 
@@ -158,7 +159,7 @@ namespace MusicVideoPlayer.Util
         public void RemoveVideos(VideoDatas videos)
         {
             //TODO: make sure this is right
-            levelsVideos.Remove(videos.level);
+            levelsVideos.TryRemove(videos.level, out _);
         }
 
         public static void SaveVideoToDisk(VideoData video)
@@ -200,9 +201,9 @@ namespace MusicVideoPlayer.Util
             //}
         }
 
-        private void RetrieveAllVideoData(Loader loader, Dictionary<string, CustomPreviewBeatmapLevel> levels)
+        private void RetrieveAllVideoData(Loader loader, ConcurrentDictionary<string, CustomPreviewBeatmapLevel> levels)
         {
-            levelsVideos = new Dictionary<IPreviewBeatmapLevel, VideoDatas>();
+            levelsVideos = new ConcurrentDictionary<IPreviewBeatmapLevel, VideoDatas>();
             RetrieveCustomLevelVideoData(loader, levels);
             RetrieveOSTVideoData();
         }
@@ -301,7 +302,7 @@ namespace MusicVideoPlayer.Util
             _loadingTask.Run();
         }
 
-        private void RetrieveCustomLevelVideoData(Loader loader, Dictionary<string, CustomPreviewBeatmapLevel> levels)
+        private void RetrieveCustomLevelVideoData(Loader loader, ConcurrentDictionary<string, CustomPreviewBeatmapLevel> levels)
         {
             _loadingTask = new HMTask(() =>
             {
@@ -403,7 +404,7 @@ namespace MusicVideoPlayer.Util
                 if (RemoveVideo(video))
                 {
                     File.Delete(Path.Combine(levelPath, "video.json"));
-                    levelsVideos.Remove(video.level);
+                    levelsVideos.TryRemove(video.level, out _);
                     return true;
                 }
                 else
