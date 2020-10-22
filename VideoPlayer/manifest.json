@@ -1,17 +1,17 @@
 ﻿{
   "$schema": "https://github.com/nike4613/BSIPA-MetadataFileSchema/master/Schema.json",
   "author": "Rolo, B_Rad15, rie-kumar",
-  "description": "Music Video Player is a mod that allows players to download and have a video play in sync with the music during a beat saber level (i.e. the songs music video, a dance video of for the song)",
-  "gameVersion": "1.11.1",
+  "description": "Music Video Player is a mod that allows players to download and have a video play in sync with the music during a beat saber level (i.e. the song's music video or a dance video for the song)",
+  "gameVersion": "1.12.2",
   "id": "Music Video Player",
   "name": "Music Video Player",
-  "version": "1.11.3",
+  "version": "1.12.0",
   "features": [
 
   ],
   "dependsOn": {
-    "BS Utils": "^1.4.11",
-    "BeatSaberMarkupLanguage": "^1.3.4",
-    "BSIPA": "^4.0.5"
+    "BS Utils": "^1.5.0",
+    "BeatSaberMarkupLanguage": "^1.3.5",
+    "BSIPA": "^4.1.3"
   }
 }
