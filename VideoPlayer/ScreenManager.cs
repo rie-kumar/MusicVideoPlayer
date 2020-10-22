@@ -65,7 +65,7 @@ namespace MusicVideoPlayer
             get
             {
                 if (_envSpawnRot == null)
-                    _envSpawnRot = Resources.FindObjectsOfTypeAll<EnvironmentSpawnRotation>().FirstOrDefault();
+                    _envSpawnRot = Resources.FindObjectsOfTypeAll<EnvironmentSpawnRotation>().LastOrDefault();
                 return _envSpawnRot;
             }
         }
@@ -123,7 +123,7 @@ namespace MusicVideoPlayer
             body.transform.localScale = new Vector3(16f / 9f + 0.1f, 1.1f, 0.1f);
             Renderer bodyRenderer = body.GetComponent<Renderer>();
             bodyRenderer.material = new Material(Resources.FindObjectsOfTypeAll<Material>()
-                .First(x =>
+                .Last(x =>
                     x.name == "DarkEnvironmentSimple")); // finding objects is wonky because platforms hides them
 
             GameObject videoScreen = GameObject.CreatePrimitive(PrimitiveType.Quad);
@@ -369,7 +369,7 @@ namespace MusicVideoPlayer
                 if (rotateIn360)
                 {
                     CoreGameHUDController cgh = Resources.FindObjectsOfTypeAll<CoreGameHUDController>()
-                        .FirstOrDefault(x => x.isActiveAndEnabled);
+                        .LastOrDefault(x => x.isActiveAndEnabled);
                     screenSoftParentRotation.AssignParent(cgh.transform);
                 }
 
@@ -449,7 +449,7 @@ namespace MusicVideoPlayer
         private IEnumerator WaitForAudioSync()
         {
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Any());
-            syncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().First();
+            syncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Last();
 
             SetPlacement(MVPSettings.instance.PlacementMode);
 
