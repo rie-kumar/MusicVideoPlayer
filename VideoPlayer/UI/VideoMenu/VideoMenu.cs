@@ -1374,6 +1374,20 @@ namespace MusicVideoPlayer
             selectedVideo = null;
             ChangeView(false);
             Plugin.logger.Debug($"Selected Level: {level.songName}");
+            
+            
+            if (selectedVideo != null)
+            {
+                //Don't query YouTube if a video is configured
+                return;
+            }
+            
+            if (!Settings.instance.PreloadSearch)
+            {
+                return;
+                
+            }
+            
             //Get Results but only pass if string is the same
             StartCoroutine(YouTubeSearcher.SearchYoutubeWithMyExeCoroutine($"{selectedLevel.songName} - {selectedLevel.songAuthorName}", null, 15));
         }

@@ -72,6 +72,15 @@ namespace MusicVideoPlayer
             }
         }
         
+        public bool PreloadSearch
+        {
+            get => config.GetBool("General", "Preload Search", false);
+            set
+            {
+                config.SetBool("General", "Preload Search", value);
+            }
+        }
+        
         public bool PlayPreviewAudio
         {
             get => config.GetBool("General", "Play Preview Audio", false);

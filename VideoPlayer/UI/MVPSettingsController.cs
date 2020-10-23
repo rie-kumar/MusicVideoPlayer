@@ -46,12 +46,20 @@ namespace MusicVideoPlayer.UI
             get => Settings.instance.ShowVideoSettings;
             set => Settings.instance.ShowVideoSettings = value;
             
-        }        
+        }
+        
         [UIValue("rotate-360")]
         public bool RotateIn360
         {
             get => Settings.instance.RotateIn360;
             set => Settings.instance.RotateIn360 = value;
+        }
+        
+        [UIValue("preload-search")]
+        public bool PreloadSearch
+        {
+            get => Settings.instance.PreloadSearch;
+            set => Settings.instance.PreloadSearch = value;
         }
 
         [UIValue("play-preview-audio")]
