@@ -16,7 +16,7 @@ using UnityEngine.UI;
 
 namespace MusicVideoPlayer.UI
 {
-    public class MVPSettingsController: BSMLResourceViewController
+    public class SettingsController: BSMLResourceViewController
     {
         public override string ResourceName => "MusicVideoPlayer.UI.Views.settings.bsml";
         

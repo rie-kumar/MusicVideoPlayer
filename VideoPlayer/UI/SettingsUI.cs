@@ -3,7 +3,7 @@ using BeatSaberMarkupLanguage.MenuButtons;
 
 namespace MusicVideoPlayer.UI
 {
-    internal class PlacementUI
+    internal class SettingsUI
     {
         private static readonly MenuButton menuButton = new MenuButton("Video Player", "MusicVideoPlayer Settings", ShowFlow, true);
         

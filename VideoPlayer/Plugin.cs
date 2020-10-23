@@ -32,7 +32,7 @@ namespace MusicVideoPlayer
         public void OnApplicationStart()
         {
             Settings.Init();
-            PlacementUI.CreateMenu();
+            SettingsUI.CreateMenu();
             GameplaySetup.instance.AddTab("Video", "MusicVideoPlayer.UI.Views.video-menu.bsml", VideoMenu.instance);
             BSEvents.OnLoad();
             BSEvents.lateMenuSceneLoadedFresh += OnMenuSceneLoadedFresh;

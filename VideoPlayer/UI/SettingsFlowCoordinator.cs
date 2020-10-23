@@ -6,13 +6,13 @@ namespace MusicVideoPlayer.UI
 {
     public class SettingsFlowCoordinator: FlowCoordinator
     {
-        private MVPSettingsController controller;
+        private SettingsController controller;
 
         public void Awake()
         {
             if (!controller)
             {
-                controller = BeatSaberUI.CreateViewController<MVPSettingsController>();
+                controller = BeatSaberUI.CreateViewController<SettingsController>();
             }
         }
 
