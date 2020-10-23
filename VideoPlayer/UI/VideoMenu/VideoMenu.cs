@@ -20,6 +20,7 @@ using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using BS_Utils.Gameplay;
 using IPA.Config.Data;
 using JetBrains.Annotations;
 using TMPro;
@@ -1380,8 +1381,13 @@ namespace MusicVideoPlayer
         private void GameSceneLoaded()
         {
             StopAllCoroutines();
-            if(false)
-                ScreenManager.Instance.PrepareVideo(null);
+            
+            if (BS_Utils.Plugin.LevelData.Mode == Mode.Multiplayer)
+            {
+                Plugin.logger.Debug("Detected multiplayer, disabling");
+                ScreenManager.Instance.HideScreen();
+                return;
+            }
             ScreenManager.Instance.TryPlayVideo();
         }
 
