@@ -244,8 +244,9 @@ namespace MusicVideoPlayer
             currentVideoDescriptionText.text = "";
             currentVideoOffsetText.text = "N/A";
             EnableButtons(false);
-
-            ScreenManager.Instance.SetPlacement(MVPSettings.instance.PlacementMode);
+            
+            ScreenManager.Instance.SetPlacement(Settings.instance.PlacementMode);
+            ScreenManager.Instance.HideScreen();
         }
 
         #endregion
@@ -315,7 +316,7 @@ namespace MusicVideoPlayer
             }
             else
             {
-                ScreenManager.Instance.SetPlacement(MVPSettings.instance.PlacementMode);
+                ScreenManager.Instance.SetPlacement(Settings.instance.PlacementMode);
             }
         }
 

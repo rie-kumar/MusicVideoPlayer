@@ -87,10 +87,10 @@ namespace MusicVideoPlayer
 
             Instance = this;
 
-            showVideo = MVPSettings.instance.ShowVideoSettings;
-            rotateIn360 = MVPSettings.instance.RotateIn360;
-            playPreviewAudio = MVPSettings.instance.PlayPreviewAudio;
-            placement = MVPSettings.instance.PlacementMode;
+            showVideo = Settings.instance.ShowVideoSettings;
+            rotateIn360 = Settings.instance.RotateIn360;
+            playPreviewAudio = Settings.instance.PlayPreviewAudio;
+            placement = Settings.instance.PlacementMode;
 
             BSEvents.songPaused += PauseVideo;
             BSEvents.songUnpaused += ResumeVideo;
@@ -162,23 +162,18 @@ namespace MusicVideoPlayer
             screen.transform.parent = null;
         }
 
-        //private void VideoPrepared(VideoPlayer source)
-        //{
-        //    source.
-        //}
-
         private void OnMenuSceneLoadedFresh(ScenesTransitionSetupDataSO scenesTransition)
         {
             if (currentVideo != null) PrepareVideo(currentVideo);
             PauseVideo();
-            //HideScreen();
+            HideScreen();
         }
 
         private void OnMenuSceneLoaded()
         {
             if (currentVideo != null) PrepareVideo(currentVideo);
             PauseVideo();
-            //HideScreen();
+            HideScreen();
         }
 
         public void TryPlayVideo()
@@ -451,7 +446,7 @@ namespace MusicVideoPlayer
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Any());
             syncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Last();
 
-            SetPlacement(MVPSettings.instance.PlacementMode);
+            SetPlacement(Settings.instance.PlacementMode);
 
             if (IsVideoPlayable())
             {

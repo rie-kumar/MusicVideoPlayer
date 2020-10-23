@@ -42,7 +42,7 @@
       <HintPath>$(BeatSaberDir)\Plugins\BS_Utils.dll</HintPath>
     </Reference>
     <Reference Include="GameplayCore">
-      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\Managed\GameplayCore.dll</HintPath>
+      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\GameplayCore.dll</HintPath>
     </Reference>
     <Reference Include="HMLib">
       <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\HMLib.dll</HintPath>
@@ -127,7 +127,10 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="manifest.json" />
-    <Compile Include="UI\MVPSettings.cs" />
+    <Compile Include="Settings.cs" />
+    <Compile Include="UI\MVPSettingsController.cs" />
+    <Compile Include="UI\PlacementFlowCoordinator.cs" />
+    <Compile Include="UI\PlacementUI.cs" />
     <Compile Include="UI\VideoMenu\VideoMenu.cs" />
     <Compile Include="Util\Base64Sprites.cs" />
     <Compile Include="Util\SoftParent.cs" />
@@ -146,8 +149,8 @@
     <None Include="..\.editorconfig">
       <Link>.editorconfig</Link>
     </None>
-    <EmbeddedResource Include="Views\settings.bsml" />
-    <EmbeddedResource Include="Views\video-menu.bsml" />
+    <EmbeddedResource Include="UI\Views\settings.bsml" />
+    <EmbeddedResource Include="UI\Views\video-menu.bsml" />
     <None Include="ILRepack.targets" />
   </ItemGroup>
   <ItemGroup>

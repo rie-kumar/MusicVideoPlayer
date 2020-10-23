@@ -71,7 +71,7 @@ namespace MusicVideoPlayer.YT
                 Instance.VideosDownloading = 0;
                 DontDestroyOnLoad(Instance);
                 Instance.videoQueue = new Queue<VideoDownload>();
-                Instance.quality = MVPSettings.instance.QualityMode;
+                Instance.quality = Settings.instance.QualityMode;
                 Instance.downloading = false;
                 Instance.updated = false;
                 Instance.UpdateYDL();

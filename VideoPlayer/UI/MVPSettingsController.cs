@@ -9,16 +9,17 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using BeatSaberMarkupLanguage.ViewControllers;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace MusicVideoPlayer.UI
 {
-    public class MVPSettings : PersistentSingleton<MVPSettings>
+    public class MVPSettingsController: BSMLResourceViewController
     {
-        private Config config;
-
+        public override string ResourceName => "MusicVideoPlayer.UI.Views.settings.bsml";
+        
         [UIValue("positions")] private List<object> screenPositions = new object[]
         {
             VideoPlacement.BackgroundHigh,
@@ -30,7 +31,7 @@ namespace MusicVideoPlayer.UI
             VideoPlacement.Bottom,
             VideoPlacement.Top
         }.ToList();
-
+        
         [UIValue("modes")] private List<object> qualityModes = (new object[]
         {
             VideoQuality.Best,
@@ -42,63 +43,38 @@ namespace MusicVideoPlayer.UI
         [UIValue("show-video")]
         public bool ShowVideoSettings
         {
-            get => config.GetBool("General", "Show Video", true);
-            set
-            {
-                ScreenManager.showVideo = value;
-                config.SetBool("General", "Show Video", value);
-            }
+            get => Settings.instance.ShowVideoSettings;
+            set => Settings.instance.ShowVideoSettings = value;
+            
         }        
         [UIValue("rotate-360")]
         public bool RotateIn360
         {
-            get => config.GetBool("General", "Rotate in 360", true);
-            set
-            {
-                ScreenManager.rotateIn360 = value;
-                config.SetBool("General", "Rotate in 360", value);
-            }
+            get => Settings.instance.RotateIn360;
+            set => Settings.instance.RotateIn360 = value;
         }
 
         [UIValue("play-preview-audio")]
         public bool PlayPreviewAudio
         {
-            get => config.GetBool("General", "Play Preview Audio", false);
-            set
-            {
-                ScreenManager.playPreviewAudio = value;
-                config.SetBool("General", "Play Preview Audio", value);
-            }
+            get => Settings.instance.PlayPreviewAudio;
+            set => Settings.instance.PlayPreviewAudio = value;
         }
-
-        private VideoPlacement placementMode;
-
+        
         [UIValue("screen-position")]
         public VideoPlacement PlacementMode
         {
-            get => placementMode;
-            set
-            {
-                ScreenManager.Instance.SetPlacement(value);
-                placementMode = value;
-                config.SetString("Positions", "Video Placement", placementMode.ToString());
-            }
+            get => Settings.instance.PlacementMode;
+            set => Settings.instance.PlacementMode = value;
         }
-
-        private VideoQuality qualityMode;
 
         [UIValue("quality")]
         public VideoQuality QualityMode
         {
-            get => qualityMode;
-            set
-            {
-                YouTubeDownloader.Instance.quality = value;
-                qualityMode = value;
-                config.SetString("Modes", "Video Quality", qualityMode.ToString());
-            }
+            get => Settings.instance.QualityMode;
+            set => Settings.instance.QualityMode = value;
         }
-
+    
         [UIComponent("howManyDeleted")] private TextMeshProUGUI howManyDeleted;
 
         [UIComponent("DeleteAllButton")]
@@ -240,12 +216,17 @@ namespace MusicVideoPlayer.UI
                 }
             }
         }
-
-        public void Awake()
+        
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
-            config = new Config("MVP");
-            placementMode = Enum.TryParse(config.GetString("Positions", "Video Placement", "BackgroundMid"), out VideoPlacement placementParsed) ? placementParsed : VideoPlacement.BackgroundMid;
-            qualityMode = Enum.TryParse(config.GetString("Modes", "Video Quality", "Best"), out VideoQuality qualityParsed) ? qualityParsed : VideoQuality.High;
+            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
+            ScreenManager.Instance.ShowScreen();
+        }
+        
+        protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
+        {
+            base.DidDeactivate(removedFromHierarchy, screenSystemDisabling);
+            ScreenManager.Instance.HideScreen();
         }
     }
 }
