@@ -228,7 +228,7 @@ namespace MusicVideoPlayer.YT
                 };
                 Plugin.logger.Info($"yt search command: {searchProcess.StartInfo.FileName} {searchProcess.StartInfo.Arguments}");
                 yield return searchProcess.Start();
-                var fifteenSeconds = new TimeSpan(15 * TimeSpan.TicksPerSecond);
+                var fifteenSeconds = new TimeSpan(30 * TimeSpan.TicksPerSecond);
                 var countdown = YouTubeDownloader.Countdown(searchProcess, fifteenSeconds);
                 SharedCoroutineStarter.instance.StartCoroutine(countdown);
                 // Plugin.logger.Debug("started");
@@ -547,7 +547,7 @@ namespace MusicVideoPlayer.YT
         {
             if (searchInProgress) SharedCoroutineStarter.instance.StopCoroutine("SearchYoutubeWithMyExeCoroutine");
             SharedCoroutineStarter.instance.StartCoroutine(
-                YouTubeSearcher.SearchYoutubeWithMyExeCoroutine(query, callback));
+                YouTubeSearcher.SearchYoutubeWithMyExeCoroutine(query, callback, 15));
         }
     }
 
