@@ -74,7 +74,12 @@ namespace MusicVideoPlayer.YT
                 Instance.quality = Settings.instance.QualityMode;
                 Instance.downloading = false;
                 Instance.updated = false;
+#if UPDATEWORKING //Currently Not Working due to wrongful GitHub removal
                 Instance.UpdateYDL();
+#else
+                Instance.updated = true;
+                Plugin.logger.Info("Youtube-DL update complete");
+#endif
                 try
                 {
                     var ffmpegProcess = new Process
@@ -609,6 +614,7 @@ namespace MusicVideoPlayer.YT
 
         private void UpdateYDL()
         {
+            //Currently Not Working due to wrongful GitHub removal
             try
             {
                 if (File.Exists($"{Environment.CurrentDirectory}/Youtube-dl/youtube-dl.exe.new"))

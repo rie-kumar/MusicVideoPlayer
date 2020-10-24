@@ -6,7 +6,6 @@ using BeatSaberMarkupLanguage.MenuButtons;
 using BeatSaberMarkupLanguage.Parser;
 using BS_Utils.Utilities;
 using HMUI;
-using MusicVideoPlayer.UI;
 using MusicVideoPlayer.Util;
 using MusicVideoPlayer.YT;
 using System;
@@ -1358,7 +1357,7 @@ namespace MusicVideoPlayer
             if (selectedLevel != video.level || videoTitleText.text == "No Video" ||
                 videoDatas.videos.IndexOf(video) != videoDatas.activeVideo)
             {
-                Plugin.logger.Info("Not Same Video");
+                Plugin.logger.Debug("Not Same Video");
                 return;
             }
             LoadVideoDownloadState();
@@ -1446,20 +1445,14 @@ namespace MusicVideoPlayer
             {
                 var handler = DidEnable;
 
-                if (handler != null)
-                {
-                    handler(this, EventArgs.Empty);
-                }
+                handler?.Invoke(this, EventArgs.Empty);
             }
 
             void OnDisable()
             {
                 var handler = DidDisable;
 
-                if (handler != null)
-                {
-                    handler(this, EventArgs.Empty);
-                }
+                handler?.Invoke(this, EventArgs.Empty);
             }
         }
 
