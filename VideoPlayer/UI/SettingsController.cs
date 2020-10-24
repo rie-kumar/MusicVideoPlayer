@@ -228,7 +228,10 @@ namespace MusicVideoPlayer.UI
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-            ScreenManager.Instance.ShowScreen();
+            if (Settings.instance.ShowVideoSettings)
+            {
+                ScreenManager.Instance.ShowScreen();
+            }
         }
         
         protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)

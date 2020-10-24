@@ -9,11 +9,11 @@
         <horizontal pad-top='10'>
           <vertical child-control-width='false' horizontal-fit='PreferredSize' vertical-fit='PreferredSize'>
             <vertical id='current-video-player' preferred-height='16' preferred-width='48' pad-left='80'/>
-            <vertical preferred-width='80' preferred-height='10'>
-              <text id='current-video-description' text="No Description" word-wrapping='true' font-align='TopLeft' overflow-mode='Ellipsis' font-size='1.5'></text>
+            <vertical preferred-width='80' preferred-height='14'>
+              <text id='current-video-description' text="No Description" word-wrapping='true' font-align='TopLeft' overflow-mode='Ellipsis' font-size='1.8'></text>
             </vertical>
           </vertical>
-          <vertical pad-top='4' vertical-fit='PreferredSize' horizontal-fit='PreferredSize' spacing='0' pad-bottom='30'>
+          <vertical pad-top='0' vertical-fit='PreferredSize' horizontal-fit='PreferredSize' spacing='0' pad-bottom='14'>
             <horizontal pad-top='0' spacing='3' horizontal-fit='PreferredSize'>
               <button id='offset-decrease-button' font-size='3' hover-hint='Starts Video Later' text='-' pad='1' on-click='on-offset-decrease-action' all-uppercase='false'/>
               <text id='current-video-offset' text="0" font-size='4' align='Center'></text>
@@ -27,7 +27,7 @@
             <text id='download-state-text' text='Download Progress: Complete' align='Center' font-size='3'/>
           </vertical>
         </horizontal>
-        <horizontal pad-top='-6'>
+        <horizontal>
           <button id='delete-button' text='Delete Config' on-click='on-delete-action'/>
           <button id='delete-video-button' text='Delete Video' on-click='on-delete-video-action'/>
           <button id='add-button' text='Add Config' on-click='on-add-action' interactable='false'/>

@@ -10,6 +10,9 @@ namespace MusicVideoPlayer
     {
         public static Config config { get; private set; }
         public static Settings instance { get; private set; }
+        
+        private VideoPlacement placementMode;
+        private VideoQuality qualityMode;
 
         public static void Init()
         {
@@ -18,28 +21,32 @@ namespace MusicVideoPlayer
         private Settings()
         {
             config = new Config("MVP");
+            placementMode = VideoPlacementSetting.FromName(
+                config.GetString("Positions", "Video Placement", "")
+            );
+            qualityMode = VideoQualitySetting.FromName(
+                config.GetString("Modes", "Video Quality", "")
+            );
         }
 
         public VideoQuality QualityMode
         {
-            get => VideoQualitySetting.FromName(
-                config.GetString("Modes", "Video Quality", "")
-            );
+            get => qualityMode;
             set
             {
                 YouTubeDownloader.Instance.quality = value;
+                qualityMode = value;
                 config.SetString("Modes", "Video Quality", value.ToString());
             }
         }
         
         public VideoPlacement PlacementMode
         {
-            get => VideoPlacementSetting.FromName(
-                config.GetString("Positions", "Video Placement", "")
-            );
+            get => placementMode;
             set
             {
                 ScreenManager.Instance.SetPlacement(value);
+                placementMode = value;
                 config.SetString("Positions", "Video Placement", value.ToString());
             }
         }
@@ -74,7 +81,7 @@ namespace MusicVideoPlayer
         
         public bool PreloadSearch
         {
-            get => config.GetBool("General", "Preload Search", false);
+            get => config.GetBool("General", "Preload Search", true);
             set
             {
                 config.SetBool("General", "Preload Search", value);
