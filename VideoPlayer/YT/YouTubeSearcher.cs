@@ -143,7 +143,7 @@ namespace MusicVideoPlayer.YT
                 };
                 Plugin.logger.Debug("Process Made");
                 Plugin.logger.Info(
-                    $"yt command: \"{searchProcess.StartInfo.FileName}\" {searchProcess.StartInfo.Arguments}");
+                    $"yt search command: \"{searchProcess.StartInfo.FileName}\" {searchProcess.StartInfo.Arguments}");
                 yield return isReadingOutput = false;
                 searchProcess.ErrorDataReceived += (sender, e) =>
                 {
@@ -226,7 +226,7 @@ namespace MusicVideoPlayer.YT
                         searchProcess.Dispose();
                     } catch { }
                 };
-                // Plugin.logger.Debug("Error Set");
+                Plugin.logger.Info($"yt search command: {searchProcess.StartInfo.FileName} {searchProcess.StartInfo.Arguments}");
                 yield return searchProcess.Start();
                 var fifteenSeconds = new TimeSpan(15 * TimeSpan.TicksPerSecond);
                 var countdown = YouTubeDownloader.Countdown(searchProcess, fifteenSeconds);
