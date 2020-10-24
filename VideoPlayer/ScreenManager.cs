@@ -446,8 +446,6 @@ namespace MusicVideoPlayer
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Any());
             syncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Last();
 
-            SetPlacement(Settings.instance.PlacementMode);
-
             if (IsVideoPlayable())
             {
                 Plugin.logger.Debug("Video is playing!");
@@ -466,6 +464,7 @@ namespace MusicVideoPlayer
                 }
 
                 ShowScreen();
+                SetPlacement(Settings.instance.PlacementMode);
                 PlayVideo(false);
             }
             else
