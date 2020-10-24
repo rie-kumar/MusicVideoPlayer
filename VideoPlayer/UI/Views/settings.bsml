@@ -1,0 +1,21 @@
+<settings-container xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+                    xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
+    <bool-setting apply-on-change="true" text='Show Video' value='show-video'
+                      hover-hint='Enable or disable the video player'></bool-setting>
+        <dropdown-list-setting apply-on-change="true" text='Screen Position' value='screen-position' options='positions'></dropdown-list-setting>
+        <dropdown-list-setting apply-on-change="true" text='Download Quality' value='quality' options='modes'></dropdown-list-setting>
+        <checkbox apply-on-change="true" text='Play Video Audio when Previewing' value='play-preview-audio'
+                  hover-hint='If checked, will play both the audio from the video and the audio from the Beatmap, allowing for easier syncing'></checkbox>
+        <checkbox apply-on-change="true" text='Rotate Screen in 360/90' value='rotate-360'
+                  hover-hint='If checked, will rotate the screen to match your view when in a 360/90 degree map'></checkbox>
+        <checkbox apply-on-change="true" text='Search Preloading' value='preload-search'
+                  hover-hint='Speed up search results by loading video results the moment you select a song'></checkbox>
+        <horizontal>
+                <button id="DownloadAllButton" text='Re-Download All Videos' on-click='ReDownloadAll'
+                        hover-hint='Re-Download All Videos (CANNOT BE CANCELLED)'></button>
+                <text text='' id="howManyVideoDone"></text>
+                <button id="DeleteAllButton" text='Delete All Video Files (Keep Config)' on-click='DeleteAll'
+                        hover-hint='Delete All Video Files (CANNOT BE CANCELLED)'></button>
+                <text text='' id="howManyDeleted"></text>
+        </horizontal>
+</settings-container>

@@ -65,7 +65,7 @@ namespace MusicVideoPlayer
             get
             {
                 if (_envSpawnRot == null)
-                    _envSpawnRot = Resources.FindObjectsOfTypeAll<EnvironmentSpawnRotation>().FirstOrDefault();
+                    _envSpawnRot = Resources.FindObjectsOfTypeAll<EnvironmentSpawnRotation>().LastOrDefault();
                 return _envSpawnRot;
             }
         }
@@ -87,10 +87,10 @@ namespace MusicVideoPlayer
 
             Instance = this;
 
-            showVideo = MVPSettings.instance.ShowVideoSettings;
-            rotateIn360 = MVPSettings.instance.RotateIn360;
-            playPreviewAudio = MVPSettings.instance.PlayPreviewAudio;
-            placement = MVPSettings.instance.PlacementMode;
+            showVideo = Settings.instance.ShowVideoSettings;
+            rotateIn360 = Settings.instance.RotateIn360;
+            playPreviewAudio = Settings.instance.PlayPreviewAudio;
+            placement = Settings.instance.PlacementMode;
 
             BSEvents.songPaused += PauseVideo;
             BSEvents.songUnpaused += ResumeVideo;
@@ -123,7 +123,7 @@ namespace MusicVideoPlayer
             body.transform.localScale = new Vector3(16f / 9f + 0.1f, 1.1f, 0.1f);
             Renderer bodyRenderer = body.GetComponent<Renderer>();
             bodyRenderer.material = new Material(Resources.FindObjectsOfTypeAll<Material>()
-                .First(x =>
+                .Last(x =>
                     x.name == "DarkEnvironmentSimple")); // finding objects is wonky because platforms hides them
 
             GameObject videoScreen = GameObject.CreatePrimitive(PrimitiveType.Quad);
@@ -162,23 +162,18 @@ namespace MusicVideoPlayer
             screen.transform.parent = null;
         }
 
-        //private void VideoPrepared(VideoPlayer source)
-        //{
-        //    source.
-        //}
-
         private void OnMenuSceneLoadedFresh(ScenesTransitionSetupDataSO scenesTransition)
         {
             if (currentVideo != null) PrepareVideo(currentVideo);
             PauseVideo();
-            //HideScreen();
+            HideScreen();
         }
 
         private void OnMenuSceneLoaded()
         {
             if (currentVideo != null) PrepareVideo(currentVideo);
             PauseVideo();
-            //HideScreen();
+            HideScreen();
         }
 
         public void TryPlayVideo()
@@ -369,7 +364,7 @@ namespace MusicVideoPlayer
                 if (rotateIn360)
                 {
                     CoreGameHUDController cgh = Resources.FindObjectsOfTypeAll<CoreGameHUDController>()
-                        .FirstOrDefault(x => x.isActiveAndEnabled);
+                        .LastOrDefault(x => x.isActiveAndEnabled);
                     screenSoftParentRotation.AssignParent(cgh.transform);
                 }
 
@@ -449,9 +444,9 @@ namespace MusicVideoPlayer
         private IEnumerator WaitForAudioSync()
         {
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Any());
-            syncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().First();
+            syncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Last();
 
-            SetPlacement(MVPSettings.instance.PlacementMode);
+            SetPlacement(Settings.instance.PlacementMode);
 
             if (IsVideoPlayable())
             {
