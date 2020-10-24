@@ -308,6 +308,7 @@ namespace MusicVideoPlayer
 
                 if (isActive)
                 {
+                    ScreenManager.Instance.ShowScreen();
                     ScreenManager.Instance.SetScale(videoPlayerDetailScale);
                     ScreenManager.Instance.SetPosition(videoPlayerDetailPosition);
                     ScreenManager.Instance.SetRotation(videoPlayerDetailRotation);
@@ -317,7 +318,7 @@ namespace MusicVideoPlayer
             }
             else
             {
-                ScreenManager.Instance.SetPlacement(Settings.instance.PlacementMode);
+                ScreenManager.Instance.HideScreen();
             }
         }
 
@@ -1399,6 +1400,12 @@ namespace MusicVideoPlayer
             if (BS_Utils.Plugin.LevelData.Mode == Mode.Multiplayer)
             {
                 Plugin.logger.Debug("Detected multiplayer, disabling");
+                ScreenManager.Instance.HideScreen();
+                return;
+            }
+
+            if (!Settings.instance.ShowVideoSettings)
+            {
                 ScreenManager.Instance.HideScreen();
                 return;
             }
