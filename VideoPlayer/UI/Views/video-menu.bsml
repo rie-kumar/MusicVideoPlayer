@@ -13,7 +13,7 @@
               <text id='current-video-description' text="No Description" word-wrapping='true' font-align='TopLeft' overflow-mode='Ellipsis' font-size='1.5'></text>
             </vertical>
           </vertical>
-          <vertical pad-top='2' vertical-fit='PreferredSize' horizontal-fit='PreferredSize' spacing='0' pad-bottom='30'>
+          <vertical pad-top='4' vertical-fit='PreferredSize' horizontal-fit='PreferredSize' spacing='0' pad-bottom='30'>
             <horizontal pad-top='0' spacing='3' horizontal-fit='PreferredSize'>
               <button id='offset-decrease-button' font-size='3' hover-hint='Starts Video Later' text='-' pad='1' on-click='on-offset-decrease-action' all-uppercase='false'/>
               <text id='current-video-offset' text="0" font-size='4' align='Center'></text>

@@ -69,5 +69,10 @@ namespace MusicVideoPlayer.Util
                     return "?";
             }
         }
+        
+        public static VideoQuality FromName(string mode)
+        {
+            return Enum.TryParse(mode, out VideoQuality qualityParsed) ? qualityParsed : VideoQuality.High;
+        }
     }
 }

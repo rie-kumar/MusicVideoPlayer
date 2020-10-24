@@ -121,5 +121,10 @@ namespace MusicVideoPlayer.Util
                     return "?";
             }
         }
+        
+        public static VideoPlacement FromName(String mode)
+        {
+            return Enum.TryParse(mode, out VideoPlacement placementParsed) ? placementParsed : VideoPlacement.BackgroundMid;
+        }
     }
 }
