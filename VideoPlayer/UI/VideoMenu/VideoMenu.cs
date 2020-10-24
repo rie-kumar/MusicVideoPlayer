@@ -207,6 +207,7 @@ namespace MusicVideoPlayer
             if (videoData != null)
             {
                 Plugin.logger.Info($"Loading: {videoData?.title} for level: {selectedLevel?.songName}");
+                //TODO: Not Filter Emoji once BSML is fixed
                 videoTitleText.text = $"[{selectedVideo.duration}] {FilterEmoji(selectedVideo.title)}";
                 currentVideoDescriptionText.text = FilterEmoji(selectedVideo.description);
                 currentVideoOffsetText.text = selectedVideo.offset.ToString();
