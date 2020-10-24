@@ -1,5 +1,4 @@
 ﻿using BS_Utils.Utilities;
-using MusicVideoPlayer.UI;
 using MusicVideoPlayer.Util;
 using System;
 using System.Collections;
@@ -361,12 +360,6 @@ namespace MusicVideoPlayer
             float practiceSettingsSongStart = 0;
             if (!preview)
             {
-                if (rotateIn360)
-                {
-                    CoreGameHUDController cgh = Resources.FindObjectsOfTypeAll<CoreGameHUDController>()
-                        .LastOrDefault(x => x.isActiveAndEnabled);
-                    screenSoftParentRotation.AssignParent(cgh.transform);
-                }
 
                 try // Try to get these, as errors happen when only previewing (and they are unnecessary)
                 {
@@ -436,6 +429,18 @@ namespace MusicVideoPlayer
                 //VideoMenu.songPreviewPlayer.Update();
             }
 
+            if (rotateIn360)
+            {
+                try
+                {
+                    Plugin.logger.Debug(BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.environmentInfo.environmentType.name);
+                    CoreGameHUDController cgh = Resources.FindObjectsOfTypeAll<CoreGameHUDController>()
+                        .LastOrDefault(x => x.isActiveAndEnabled);
+                    screenSoftParentRotation.AssignParent(cgh.transform);
+                }
+                catch { }
+                screenSoftParentRotation.enabled = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.environmentInfo.environmentType.name == "CircleEvironmentType";
+            }
             Plugin.logger.Debug("Offset for video: " + offsetSec);
             StopAllCoroutines();
             StartCoroutine(StartVideoDelayed(preview ? -offsetSec : -(offsetSec + practiceSettingsSongStart), preview));

@@ -6,7 +6,6 @@ using BeatSaberMarkupLanguage.MenuButtons;
 using BeatSaberMarkupLanguage.Parser;
 using BS_Utils.Utilities;
 using HMUI;
-using MusicVideoPlayer.UI;
 using MusicVideoPlayer.Util;
 using MusicVideoPlayer.YT;
 using System;

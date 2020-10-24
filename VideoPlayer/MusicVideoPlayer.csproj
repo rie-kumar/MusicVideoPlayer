@@ -128,9 +128,9 @@
   <ItemGroup>
     <EmbeddedResource Include="manifest.json" />
     <Compile Include="Settings.cs" />
-    <Compile Include="UI\MVPSettingsController.cs" />
-    <Compile Include="UI\PlacementFlowCoordinator.cs" />
-    <Compile Include="UI\PlacementUI.cs" />
+    <Compile Include="UI\SettingsController.cs" />
+    <Compile Include="UI\SettingsFlowCoordinator.cs" />
+    <Compile Include="UI\SettingsUI.cs" />
     <Compile Include="UI\VideoMenu\VideoMenu.cs" />
     <Compile Include="Util\Base64Sprites.cs" />
     <Compile Include="Util\SoftParent.cs" />
@@ -165,7 +165,7 @@
   <Import Project="ILRepack.targets" />
   <PropertyGroup>
     <PostBuildEvent>echo "Start Post Build"
-$(ProjectDir)YT\youtube-dl.exe -U
+rem $(ProjectDir)YT\youtube-dl.exe -U
 rmdir /s /q "$(ProjectDir)zipitup"
 mkdir "$(ProjectDir)zipitup"
 mkdir "$(ProjectDir)zipitup\Youtube-dl"

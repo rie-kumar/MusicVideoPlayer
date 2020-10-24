@@ -53,6 +53,7 @@ namespace MusicVideoPlayer.Util
                     return new Vector3(0, 30, 0);
                 case VideoPlacement.Top:
                     return new Vector3(-15, 0, 0);
+                case VideoPlacement.Bottom:
                 default:
                     return new Vector3(15, 0, 0);
             }
@@ -74,6 +75,7 @@ namespace MusicVideoPlayer.Util
                     return 4;
                 case VideoPlacement.Top:
                     return 3;
+                case VideoPlacement.Bottom:
                 default: 
                     return 2;
             }
@@ -81,7 +83,7 @@ namespace MusicVideoPlayer.Util
 
         public static float[] Modes()
         {
-            return new float[]
+            return new[]
             {
                 (float)VideoPlacement.BackgroundHigh,
                 (float)VideoPlacement.BackgroundMid,
