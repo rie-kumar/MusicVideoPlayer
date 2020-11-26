@@ -182,6 +182,12 @@ namespace MusicVideoPlayer
             LoadVideoSettings(videoData, false);
         }
 
+        private string FilterEmoji(string text)
+        {
+            //see https://stackoverflow.com/a/28025891 for an explanation
+            return Regex.Replace(text, @"\p{Cs}", "");
+        }
+        
         public void LoadVideoSettings(VideoData videoData, bool checkForVideo = true)
         {
             // Plugin.logger.Info($"Stopping Preview");
@@ -201,8 +207,9 @@ namespace MusicVideoPlayer
             if (videoData != null)
             {
                 Plugin.logger.Info($"Loading: {videoData?.title} for level: {selectedLevel?.songName}");
-                videoTitleText.text = $"[{selectedVideo.duration}] {selectedVideo.title}";
-                currentVideoDescriptionText.text = selectedVideo.description;
+                //TODO: Not Filter Emoji once BSML is fixed
+                videoTitleText.text = $"[{selectedVideo.duration}] {FilterEmoji(selectedVideo.title)}";
+                currentVideoDescriptionText.text = FilterEmoji(selectedVideo.description);
                 currentVideoOffsetText.text = selectedVideo.offset.ToString();
                 EnableButtons(true);
             }
