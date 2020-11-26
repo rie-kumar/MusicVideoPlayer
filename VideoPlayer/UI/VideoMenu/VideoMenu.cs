@@ -1255,9 +1255,10 @@ namespace MusicVideoPlayer
                 Plugin.logger.Debug("Done Prepping");
                 ScreenManager.Instance.PlayVideo(true);
                 Plugin.logger.Debug("Playing");
-                yield return songPreviewPlayer.volume = 1;
+                songPreviewPlayer.volume = 1;
                 songPreviewPlayer.CrossfadeTo(selectedLevel.GetPreviewAudioClipAsync(new CancellationToken()).Result, 0,
                     selectedLevel.songDuration, 1f);
+                yield return 3;
             }
             SetPreviewState();
         }

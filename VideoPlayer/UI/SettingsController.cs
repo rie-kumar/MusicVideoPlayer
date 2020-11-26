@@ -178,7 +178,7 @@ namespace MusicVideoPlayer.UI
                     }
                     int levelTotal = levelCount;
                     howManyVideosDone.text = $"0/{levelCount}";
-                    int processCount = 0;
+                    // int processCount = 0;
                     int counter = 0;
                     foreach (KeyValuePair<IPreviewBeatmapLevel, VideoDatas> videoKVP in VideoLoader.levelsVideos)
                     {

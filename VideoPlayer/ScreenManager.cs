@@ -183,7 +183,8 @@ namespace MusicVideoPlayer
         private static void VideoPlayerErrorReceived(VideoPlayer source, string message)
         {
             if (message == "Can't play movie []") return;
-            Plugin.logger.Warn("Video player error: " + message);
+            Plugin.logger.Debug("Video player error: " + message);
+            // File.AppendAllText("video errors.log", "\n" + message);
         }
 
         private IEnumerator prepareVideoCoroutine;
@@ -405,6 +406,20 @@ namespace MusicVideoPlayer
                     // videoPlayer.SetDirectAudioMute(track, true);
                     videoPlayer.SetDirectAudioVolume(track, 0f);
                 }
+
+                if (rotateIn360)
+                {
+                    try
+                    {
+                        Plugin.logger.Debug(BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.environmentInfo.environmentType.name);
+                        CoreGameHUDController cgh = Resources.FindObjectsOfTypeAll<CoreGameHUDController>()
+                            .LastOrDefault(x => x.isActiveAndEnabled);
+                        screenSoftParentRotation.AssignParent(cgh.transform);
+                    }
+                    catch { }
+                    //Null reference if done in preview
+                    screenSoftParentRotation.enabled = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.environmentInfo.environmentType.name == "CircleEvironmentType";
+                }
             }
             else
             {
@@ -417,29 +432,19 @@ namespace MusicVideoPlayer
                     track++) // For Each Track -> Increase Audio volume to .5 (float) on that track
                 {
                     //if (track != videoTrack) { videoPlayer.SetDirectAudioVolume(track, 0f); continue;}
-                    videoPlayer.SetDirectAudioVolume(track, playPreviewAudio ? .8f : 0f);
-                    Plugin.logger.Info($"Track: {track}");
-                    Plugin.logger.Info($"Channels: {videoPlayer.GetAudioChannelCount(track)}");
-
-                    // videoPlayer.SetDirectAudioMute(track, false);
+                    bool failed = false;
+                    try
+                    {
+                        videoPlayer.SetDirectAudioVolume(track, playPreviewAudio ? .8f : 0f);
+                        Plugin.logger.Debug($"Channels: {videoPlayer.GetAudioChannelCount(track)}");
+                    }
+                    catch (Exception)
+                    {
+                        failed = true;
+                    }
+                    Plugin.logger.Debug($"Track: {track} {(failed ? "Failed" : "Succeeded")}");
                 }
-
-                //int previewTracks = VideoMenu.songPreviewPlayer.GetPrivateField<int>("_channelsCount");
-                //VideoMenu.songPreviewPlayer.SetPrivateField("_channelsCount", 1);
-                //VideoMenu.songPreviewPlayer.Update();
-            }
-
-            if (rotateIn360)
-            {
-                try
-                {
-                    Plugin.logger.Debug(BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.environmentInfo.environmentType.name);
-                    CoreGameHUDController cgh = Resources.FindObjectsOfTypeAll<CoreGameHUDController>()
-                        .LastOrDefault(x => x.isActiveAndEnabled);
-                    screenSoftParentRotation.AssignParent(cgh.transform);
-                }
-                catch { }
-                screenSoftParentRotation.enabled = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.environmentInfo.environmentType.name == "CircleEvironmentType";
+                Plugin.logger.Debug("Done lower volume");
             }
             Plugin.logger.Debug("Offset for video: " + offsetSec);
             StopAllCoroutines();

@@ -165,7 +165,7 @@
   <Import Project="ILRepack.targets" />
   <PropertyGroup>
     <PostBuildEvent>echo "Start Post Build"
-rem $(ProjectDir)YT\youtube-dl.exe -U
+$(ProjectDir)YT\youtube-dl.exe -U
 rmdir /s /q "$(ProjectDir)zipitup"
 mkdir "$(ProjectDir)zipitup"
 mkdir "$(ProjectDir)zipitup\Youtube-dl"
