@@ -16,6 +16,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,8 +25,10 @@ using IPA.Config.Data;
 using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using UnityEngine.Video;
 using Debug = UnityEngine.Debug;
 using Image = UnityEngine.UI.Image;
 using Screen = HMUI.Screen;
@@ -296,7 +299,7 @@ namespace MusicVideoPlayer
             {
                 songPreviewPlayer.FadeOut();
             }
-
+            songPreviewTimer.Reset();
             SetPreviewState();
             return true;
         }
@@ -347,19 +350,40 @@ namespace MusicVideoPlayer
             selectedCell = -1;
         }
 
+        private Stopwatch songPreviewTimer =  new Stopwatch();
         private void UpdateOffset(bool isDecreasing)
         {
-            if (isPreviewing)
-            {
-                StopPreview(true);
-            }
+            // if (isPreviewing)
+            // {
+            //     StopPreview(true);
+            // }
 
             if (selectedVideo == null) return;
             int magnitude = isDecreasing ? offsetMagnitude * -1 : offsetMagnitude;
 
             selectedVideo.offset += magnitude;
             currentVideoOffsetText.text = selectedVideo.offset.ToString();
+            VideoPlayer.EventHandler handler = null;
+            ScreenManager.Instance.videoPlayer.seekCompleted += handler = (source) => {
+                Plugin.logger.Info("Seeking preview");
+                songPreviewPlayer.CrossfadeTo(selectedLevel.GetPreviewAudioClipAsync(new CancellationToken()).Result, 
+                    ((float)songPreviewTimer.ElapsedTicks)/TimeSpan.TicksPerSecond, selectedLevel.songDuration, 1f);
+                songPreviewTimer.Start();
+                ScreenManager.Instance.videoPlayer.seekCompleted -= handler;
+            };
+            songPreviewTimer.Stop();
+            ScreenManager.Instance.videoPlayer.time = selectedVideo.offset/1000f + songPreviewTimer.Elapsed.TotalSeconds;
+            Plugin.logger.Info($"Setting video time to {selectedVideo.offset/1000f}s + {songPreviewTimer.Elapsed.TotalSeconds}s = {selectedVideo.offset/1000f + songPreviewTimer.Elapsed.TotalSeconds}");
             Save();
+        }
+
+        public void VideoPlayerOnseekCompleted(VideoPlayer source)
+        {
+            Plugin.logger.Info("Seeking preview");
+            songPreviewPlayer.CrossfadeTo(selectedLevel.GetPreviewAudioClipAsync(new CancellationToken()).Result, 
+                ((float)songPreviewTimer.ElapsedTicks)/TimeSpan.TicksPerSecond, 9f, 1f);
+            songPreviewTimer.Start();
+            ScreenManager.Instance.videoPlayer.seekCompleted -= VideoPlayerOnseekCompleted;
         }
 
         private void Save()
@@ -981,8 +1005,8 @@ namespace MusicVideoPlayer
                 StartInfo =
                 {
                     FileName = Environment.CurrentDirectory +
-                               "\\Youtube-dl\\SyncVideoWithAudio\\SyncVideoWithAudio.exe",
-                    Arguments = $"{alignOrOffset} \"{videoAbsolutePath}\" \"{songAbsolutePath}\" \"{songLength}\"",
+                               "\\Youtube-dl\\SyncVideoWithAudio\\SyncVideoWithAudioCore.exe",
+                    Arguments = $"{alignOrOffset} \"{videoAbsolutePath}\" \"{songAbsolutePath}\" \"ffmpeg={Environment.CurrentDirectory}/Youtube-dl/ffmpeg.exe\" \"duration={songLength}\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
@@ -992,7 +1016,7 @@ namespace MusicVideoPlayer
             };
             Plugin.logger.Info("Made Guess Process");
             Plugin.logger.Debug(
-                $"{offsetProcess.StartInfo.FileName} {offsetProcess.StartInfo.Arguments} inside folder {offsetProcess.StartInfo.WorkingDirectory}");
+                $"\"{offsetProcess.StartInfo.FileName}\" {offsetProcess.StartInfo.Arguments} inside folder {offsetProcess.StartInfo.WorkingDirectory}");
             try
             {
                 // offsetProcess.OutputDataReceived += (sender, e) =>
@@ -1000,13 +1024,11 @@ namespace MusicVideoPlayer
                 //     Plugin.logger.Info(e.Data);
                 //     videoData.offsetGuess = e.Data;
                 // };
-                Plugin.logger.Info("Output");
                 offsetProcess.ErrorDataReceived += (sender, e) =>
                 {
                     Plugin.logger.Error(e.Data);
                     //videoData.offsetGuess = e.Data.Split(' ')[0];
                 };
-                Plugin.logger.Info("Error");
                 offsetProcess.Exited += (sender, e) =>
                 {
                     Plugin.logger.Info("Guess Offset done!");
@@ -1018,7 +1040,6 @@ namespace MusicVideoPlayer
                     Plugin.logger.Info($"GO->{videoData.offsetGuess}->BS");
                     Plugin.logger.Info("Done Read");
                     var restOfOutput = offsetProcess.StandardOutput.ReadToEnd();
-                    Plugin.logger.Info("Wait");
                     Plugin.logger.Info(restOfOutput);
                     var lineOutput = restOfOutput.Split('\n');
                     foreach (var line in lineOutput)
@@ -1047,13 +1068,13 @@ namespace MusicVideoPlayer
                             if (mc.Count > 3)
                             {
                                 Plugin.logger.Error(
-                                    "More than 3 matches, Shits fucked (or you got a bootleg SyncVideoWithAudio.exe)");
+                                    "More than 3 matches, Shits fucked (or you got a borked SyncVideoWithAudioCore.exe)");
                             }
 
                             for (var i = 0; i < mc.Count && i < 3; i++)
                             {
                                 var matchString = mc[i].Value.Substring(1, mc[i].Value.Length - 2);
-                                Console.WriteLine(matchString);
+                                Plugin.logger.Info(matchString);
                                 videoData.cutVideoArgs[i] = matchString;
                             }
                         }
@@ -1263,6 +1284,7 @@ namespace MusicVideoPlayer
                 ScreenManager.Instance.PlayVideo(true);
                 Plugin.logger.Debug("Playing");
                 songPreviewPlayer.volume = 1;
+                songPreviewTimer.Start();
                 songPreviewPlayer.CrossfadeTo(selectedLevel.GetPreviewAudioClipAsync(new CancellationToken()).Result, 0,
                     selectedLevel.songDuration, 1f);
                 yield return 3;

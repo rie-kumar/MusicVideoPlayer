@@ -165,16 +165,16 @@
   <Import Project="ILRepack.targets" />
   <PropertyGroup>
     <PostBuildEvent>echo "Start Post Build"
-$(ProjectDir)YT\youtube-dl.exe -U
+"$(ProjectDir)YT\youtube-dl.exe" -U 
+PING -n 1 127.0.0.1&gt;nul
 rmdir /s /q "$(ProjectDir)zipitup"
 mkdir "$(ProjectDir)zipitup"
 mkdir "$(ProjectDir)zipitup\Youtube-dl"
 mkdir "$(ProjectDir)zipitup\Plugins"
 mkdir "$(ProjectDir)zipitup\(Optional) Third Person Camera Files\"
+rmdir /S /Q "$(ProjectDir)zipitup\Youtube-dl\SyncVideoWithAudio\"
 mkdir "$(ProjectDir)zipitup\Youtube-dl\SyncVideoWithAudio\"
-rem PING -n 5 127.0.0.1&gt;nul
-xcopy /Y /S /C /I "C:\Users\brado\OneDrive\Programs\C#\SyncVideoWithAudio\bin\Release" "$(ProjectDir)zipitup\Youtube-dl\SyncVideoWithAudio\"
-xcopy /Y /F "C:\Users\brado\OneDrive\Programs\C#\SyncVideoWithAudio\concat.ps1" "$(ProjectDir)zipitup\Youtube-dl\"
+xcopy /Y /S /C /I "C:\Users\brado\OneDrive - stevens.edu\programs\SyncVideoWithAudioCore\SyncVideoWithAudioCore\bin\Release\net5.0\publish64" "$(ProjectDir)zipitup\Youtube-dl\SyncVideoWithAudio\"
 xcopy /Y "$(ProjectDir)YT\youtube-dl.exe" "$(ProjectDir)zipitup\Youtube-dl\"
 xcopy /Y "$(ProjectDir)YT\ffmpeg.exe" "$(ProjectDir)zipitup\Youtube-dl\"
 echo "Optional"

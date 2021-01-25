@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Web;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine.Networking;
@@ -105,13 +106,13 @@ namespace MusicVideoPlayer.YT
 
 
         //Make youtube process with my special parser to avoid stdout buffer overflows
-        public static IEnumerator SearchYoutubeWithMyExeCoroutine(string query, Action callback, int resultsNumber = 5)
+        public static IEnumerator SearchYoutubeWithMyExeCoroutine(string query, Action callback, int resultsNumber = 20)
         {
             //If query is the same as the last one or the same as the default one I ran when the level was loaded, just wait for that to finish and use it
             if (searchResults != null && searchResults.query == query)
             {
                 Plugin.logger.Debug("Waiting for other search");
-                yield return new WaitUntil(() => searchResults.isDone || searchResults.Count >= 5 || searchResults.query != query);
+                yield return new WaitUntil(() => searchResults.isDone || searchResults.Count >= 1 || searchResults.query != query);
                 Plugin.logger.Debug("Done Waiting for other search");
             }
             else
@@ -142,8 +143,6 @@ namespace MusicVideoPlayer.YT
                     PriorityBoostEnabled = true
                 };
                 Plugin.logger.Debug("Process Made");
-                Plugin.logger.Info(
-                    $"yt search command: \"{searchProcess.StartInfo.FileName}\" {searchProcess.StartInfo.Arguments}");
                 yield return isReadingOutput = false;
                 searchProcess.ErrorDataReceived += (sender, e) =>
                 {
@@ -205,6 +204,7 @@ namespace MusicVideoPlayer.YT
                                 ((Process) sender).Kill();
                             } catch {}
                         }
+                        callback?.Invoke();
                     }
                     catch (Exception error)
                     {
@@ -225,11 +225,13 @@ namespace MusicVideoPlayer.YT
                     {
                         searchProcess.Dispose();
                     } catch { }
+                    callback?.Invoke();
                 };
-                Plugin.logger.Info($"yt search command: {searchProcess.StartInfo.FileName} {searchProcess.StartInfo.Arguments}");
+                Plugin.logger.Info(
+                    $"yt search command: \"{searchProcess.StartInfo.FileName}\" {searchProcess.StartInfo.Arguments}");
                 yield return searchProcess.Start();
-                var fifteenSeconds = new TimeSpan(30 * TimeSpan.TicksPerSecond);
-                var countdown = YouTubeDownloader.Countdown(searchProcess, fifteenSeconds);
+                var thirtySeconds = new TimeSpan(30 * TimeSpan.TicksPerSecond);
+                var countdown = YouTubeDownloader.Countdown(searchProcess, thirtySeconds);
                 SharedCoroutineStarter.instance.StartCoroutine(countdown);
                 // Plugin.logger.Debug("started");
                 searchProcess.BeginErrorReadLine();
@@ -274,8 +276,16 @@ namespace MusicVideoPlayer.YT
             }
             if (callback == null || query != searchResults.query) yield break;
             Plugin.logger.Debug($"Invoking Callback");
-            callback?.Invoke();
-            yield return new WaitUntil((() =>  searchResults.isDone || searchResults.Count >= MaxResults));
+            // while (!searchResults.isDone && searchResults.Count < MaxResults)
+            // {
+            //     //grab number of results written
+            //     var numResults = searchResults.Count;
+            //     //update results
+            //     callback?.Invoke();
+            //     //wait for change in number of results
+            //     yield return new WaitUntil(() => searchResults.Count > numResults);
+            // }
+            //once finished, update results one last time
             callback?.Invoke();
             searchInProgress = false;
         }
@@ -373,8 +383,8 @@ namespace MusicVideoPlayer.YT
             {
                 var duration = TimeSpan.FromSeconds(double.Parse(videoSearchJson["duration"].ToString()));
                 ytResult.duration = duration.Hours > 0
-                    ? $"{duration.Hours}:{duration.Minutes}:{duration.Seconds}"
-                    : $"{duration.Minutes}:{duration.Seconds}";
+                    ? $"{duration.Hours}:{duration.Minutes:D2}:{duration.Seconds:D2}"
+                    : $"{duration.Minutes}:{duration.Seconds:D2}";
             }
             catch (FormatException)
             {
@@ -545,9 +555,9 @@ namespace MusicVideoPlayer.YT
 #endif
         public static void Search(string query, Action callback)
         {
-            if (searchInProgress) SharedCoroutineStarter.instance.StopCoroutine("SearchYoutubeWithMyExeCoroutine");
+            // if (searchInProgress) SharedCoroutineStarter.instance.StopCoroutine("SearchYoutubeWithMyExeCoroutine");
             SharedCoroutineStarter.instance.StartCoroutine(
-                YouTubeSearcher.SearchYoutubeWithMyExeCoroutine(query, callback, 15));
+                YouTubeSearcher.SearchYoutubeWithMyExeCoroutine(query, callback, 25));
         }
     }
 
